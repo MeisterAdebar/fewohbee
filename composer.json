@@ -13,9 +13,11 @@
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.6",
         "horstoeko/zugferd": "^1.0",
-        "league/flysystem-aws-s3-v3": "^3",
+        "league/flysystem-aws-s3-v3": "^3.35",
+        "league/flysystem-memory": "^3.31",
         "mpdf/mpdf": "^8.2",
-        "oneup/flysystem-bundle": "*",
+        "oneup/flysystem-bundle": "^4.14",
+        "php-mqtt/client": "*",
         "symfony/asset": "8.0.*",
         "symfony/asset-mapper": "8.0.*",
         "symfony/console": "8.0.*",
@@ -46,7 +48,6 @@
         "web-auth/webauthn-lib": "5.3.*"
     },
     "require-dev": {
-        "league/flysystem-memory": "^3",
         "phpunit/phpunit": "^12.4",
         "rector/rector": "^0.15.0",
         "symfony/browser-kit": "8.0.*",
@@ -109,7 +110,7 @@
     },
     "extra": {
         "runtime": {
-            "prod_envs": ["prod"]
+            "prod_envs": ["prod", "redis"]
         },
         "symfony": {
             "allow-contrib": false,
