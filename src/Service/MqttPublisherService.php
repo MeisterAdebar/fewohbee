@@ -78,13 +78,6 @@ public function publishApartmentStatus(Appartment $apartment): void
                 $staying = $reservation;
             }
         }
-$this->logger->debug('MQTT Debug', [
-    'apartment' => $apartment->getNumber(),
-    'arriving_booker' => $arriving?->getBooker()?->getId(),
-    'staying_booker' => $staying?->getBooker()?->getId(),
-    'departing_booker' => $departing?->getBooker()?->getId(),
-    'staying_booker_recheck' => $staying ? ($staying->getBooker() === null ? 'NULL' : 'OK') : 'no-staying',
-]);
         if ($arriving && $departing) {
             $payload = json_encode([
                 'status' => $this->translator->trans('mqtt.status.changeover', domain: 'Mqtt'),

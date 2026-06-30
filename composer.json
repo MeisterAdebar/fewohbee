@@ -17,7 +17,7 @@
         "league/flysystem-memory": "^3.31",
         "mpdf/mpdf": "^8.2",
         "oneup/flysystem-bundle": "^4.14",
-        "php-mqtt/client": "*",
+        "php-mqtt/client": "^2.3",
         "symfony/asset": "8.0.*",
         "symfony/asset-mapper": "8.0.*",
         "symfony/console": "8.0.*",
@@ -110,7 +110,7 @@
     },
     "extra": {
         "runtime": {
-            "prod_envs": ["prod", "redis"]
+            "prod_envs": ["prod"]
         },
         "symfony": {
             "allow-contrib": false,
