@@ -1,0 +1,5 @@
+mqtt.status.occupied: occupied
+mqtt.status.free: free
+mqtt.status.arrival: arrival
+mqtt.status.departure: departure
+mqtt.status.changeover: changeover

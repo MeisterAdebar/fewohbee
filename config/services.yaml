@@ -154,3 +154,12 @@ services:
     App\Workflow\Action\WorkflowActionRegistry:
         arguments:
             $actions: !tagged_iterator app.workflow.action
+
+    App\Service\MqttPublisherService:
+        arguments:
+            $mqttHost: '%env(MQTT_HOST)%'
+            $mqttPort: '%env(int:MQTT_PORT)%'
+            $mqttUsername: '%env(MQTT_USERNAME)%'
+            $mqttPassword: '%env(MQTT_PASSWORD)%'
+            $mqttClientId: '%env(MQTT_CLIENT_ID)%'
+            $mqttTopicPrefix: '%env(MQTT_TOPIC_PREFIX)%'
