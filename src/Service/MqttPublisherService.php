@@ -46,7 +46,7 @@ class MqttPublisherService
         }
     }
 
-    public function publishApartmentStatus(Appartment $apartment): void
+public function publishApartmentStatus(Appartment $apartment): void
     {
         if (!$this->isConfigured()) {
             return;
@@ -78,16 +78,22 @@ class MqttPublisherService
                 $staying = $reservation;
             }
         }
-
+$this->logger->debug('MQTT Debug', [
+    'apartment' => $apartment->getNumber(),
+    'arriving_booker' => $arriving?->getBooker()?->getId(),
+    'staying_booker' => $staying?->getBooker()?->getId(),
+    'departing_booker' => $departing?->getBooker()?->getId(),
+    'staying_booker_recheck' => $staying ? ($staying->getBooker() === null ? 'NULL' : 'OK') : 'no-staying',
+]);
         if ($arriving && $departing) {
             $payload = json_encode([
                 'status' => $this->translator->trans('mqtt.status.changeover', domain: 'Mqtt'),
                 'departing' => [
-                    'name'    => $departing->getBooker()->getFirstName() . ' ' . $departing->getBooker()->getLastName(),
+                    'name'    => $this->getDisplayName($departing),
                     'endDate' => $departing->getEndDate()->format('Y-m-d'),
                 ],
                 'arriving' => [
-                    'name'      => $arriving->getBooker()->getFirstName() . ' ' . $arriving->getBooker()->getLastName(),
+                    'name'      => $this->getDisplayName($arriving),
                     'startDate' => $arriving->getStartDate()->format('Y-m-d'),
                     'endDate'   => $arriving->getEndDate()->format('Y-m-d'),
                 ],
@@ -95,21 +101,21 @@ class MqttPublisherService
         } elseif ($arriving) {
             $payload = json_encode([
                 'status'    => $this->translator->trans('mqtt.status.arrival', domain: 'Mqtt'),
-                'name'      => $arriving->getBooker()->getFirstName() . ' ' . $arriving->getBooker()->getLastName(),
+                'name'      => $this->getDisplayName($arriving),
                 'startDate' => $arriving->getStartDate()->format('Y-m-d'),
                 'endDate'   => $arriving->getEndDate()->format('Y-m-d'),
             ]);
         } elseif ($staying) {
             $payload = json_encode([
                 'status'    => $this->translator->trans('mqtt.status.occupied', domain: 'Mqtt'),
-                'name'      => $staying->getBooker()->getFirstName() . ' ' . $staying->getBooker()->getLastName(),
+                'name'      => $this->getDisplayName($staying),
                 'startDate' => $staying->getStartDate()->format('Y-m-d'),
                 'endDate'   => $staying->getEndDate()->format('Y-m-d'),
             ]);
         } elseif ($departing) {
             $payload = json_encode([
                 'status'  => $this->translator->trans('mqtt.status.departure', domain: 'Mqtt'),
-                'name'    => $departing->getBooker()->getFirstName() . ' ' . $departing->getBooker()->getLastName(),
+                'name'    => $this->getDisplayName($departing),
                 'endDate' => $departing->getEndDate()->format('Y-m-d'),
             ]);
         } else {
@@ -144,5 +150,25 @@ class MqttPublisherService
         } catch (MqttClientException $e) {
             $this->logger->error('MQTT publish failed: ' . $e->getMessage());
         }
+    }
+
+private function getDisplayName(Reservation $reservation): string
+    {
+        $booker = $reservation->getBooker();
+        if (null === $booker) {
+            return '';
+        }
+
+        $addresses = $booker->getCustomerAddresses();
+        $firstAddress = $addresses->first();
+
+        if (false !== $firstAddress) {
+            $company = $firstAddress->getCompany();
+            if (!empty($company)) {
+                return $company;
+            }
+        }
+
+        return $booker->getLastname() ?? '';
     }
 }
