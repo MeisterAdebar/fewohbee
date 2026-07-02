@@ -78,6 +78,7 @@ public function publishApartmentStatus(Appartment $apartment): void
                 $staying = $reservation;
             }
         }
+
         if ($arriving && $departing) {
             $payload = json_encode([
                 'status' => $this->translator->trans('mqtt.status.changeover', domain: 'Mqtt'),
@@ -127,22 +128,9 @@ public function publishApartmentStatus(Appartment $apartment): void
         $cacheItem->set($payload);
         $this->cache->save($cacheItem);
 
-        try {
-            $mqtt = new MqttClient($this->mqttHost, $this->mqttPort, $this->mqttClientId);
-            $settings = (new ConnectionSettings())
-                ->setUsername($this->mqttUsername)
-                ->setPassword($this->mqttPassword);
-
-            $mqtt->connect($settings, true);
-
-            $topic = sprintf('%s/%s', $this->mqttTopicPrefix, $apartment->getNumber());
-            $mqtt->publish($topic, $payload, 0, true);
-            $this->logger->info("Published changed status for room {$apartment->getNumber()}");
-
-            $mqtt->disconnect();
-        } catch (MqttClientException $e) {
-            $this->logger->error('MQTT publish failed: ' . $e->getMessage());
-        }
+        $topic = sprintf('%s/%s', $this->mqttTopicPrefix, $apartment->getNumber());
+        $this->doPublish($topic, $payload);
+        $this->logger->info("Published changed status for room {$apartment->getNumber()}");
     }
 
 private function getDisplayName(Reservation $reservation): string
@@ -163,5 +151,25 @@ private function getDisplayName(Reservation $reservation): string
         }
 
         return $booker->getLastname() ?? '';
+    }
+
+    /**
+     * Connects to the MQTT broker and publishes a retained message to the given topic.
+     * Errors are caught and logged without interrupting the application flow.
+     */
+    protected function doPublish(string $topic, string $payload): void
+    {
+        try {
+            $mqtt = new MqttClient($this->mqttHost, $this->mqttPort, $this->mqttClientId);
+            $settings = (new ConnectionSettings())
+                ->setUsername($this->mqttUsername)
+                ->setPassword($this->mqttPassword);
+
+            $mqtt->connect($settings, true);
+            $mqtt->publish($topic, $payload, 0, true);
+            $mqtt->disconnect();
+        } catch (MqttClientException $e) {
+            $this->logger->error('MQTT publish failed: ' . $e->getMessage());
+        }
     }
 }
