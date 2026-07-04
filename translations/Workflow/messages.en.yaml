@@ -76,6 +76,7 @@ workflow:
     invoice_has_email: "Invoice has an email address"
     invoice_payment_means_is: "Payment method is"
     reservation_origin_is: "Origin is"
+    invoice_reservation_origin_is: "Reservation origin is"
 
   action:
     send_template_email: "Send email using a template"

@@ -78,6 +78,7 @@ workflow:
     invoice_has_email: "Rechnung hat eine E-Mail-Adresse"
     invoice_payment_means_is: "Zahlungsmethode ist"
     reservation_origin_is: "Herkunft ist"
+    invoice_reservation_origin_is: "Reservierungsherkunft ist"
 
   # Action labels
   action:
