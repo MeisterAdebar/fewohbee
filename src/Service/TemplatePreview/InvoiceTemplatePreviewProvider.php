@@ -112,6 +112,11 @@ class InvoiceTemplatePreviewProvider implements ITemplatePreviewProvider
             'numbers' => ['type' => 'array'],
             'appartmentTotal' => ['type' => 'scalar'],
             'miscTotal' => ['type' => 'scalar'],
+            'originName' => ['type' => 'scalar'],
+            'originCommission' => ['type' => 'scalar'],
+            'originCommissionFormated' => ['type' => 'scalar'],
+            'originPaymentFee' => ['type' => 'scalar'],
+            'originPaymentFeeFormated' => ['type' => 'scalar'],
         ];
     }
 
@@ -245,6 +250,27 @@ class InvoiceTemplatePreviewProvider implements ITemplatePreviewProvider
                 'content' => "<table style=\"width: 100%;\" data-if=\"invoice.positions|filter(p => p.positionGroup == 'tourist_tax')|length > 0\">\n  <tbody>\n    <tr>\n      <th>{{ 'invoice.tourist_tax.heading'|trans }}</th>\n      <th>{{ 'invoice.position.amount'|trans }}</th>\n      <th>{{ 'invoice.price.single'|trans }}</th>\n      <th>{{ 'invoice.vat'|trans }}</th>\n      <th style=\"text-align: right;\">{{ 'invoice.price.total'|trans }}</th>\n    </tr>\n    <tr data-repeat=\"invoice.positions|filter(p => p.positionGroup == 'tourist_tax')\" data-repeat-as=\"position\">\n      <td>[[ position.description ]]</td>\n      <td>[[ position.amount ]]</td>\n      <td>[[ position.priceFormated ]] €</td>\n      <td>[[ position.vat ]]</td>\n      <td style=\"text-align: right;\">[[ position.totalPrice ]] €</td>\n    </tr>\n  </tbody>\n</table>",
             ],
             [
+                'id' => 'invoice.origin_name',
+                'label' => 'templates.editor.origin_name',
+                'group' => 'Invoice',
+                'complexity' => 'simple',
+                'content' => '[[ originName ]]',
+            ],
+            [
+                'id' => 'invoice.origin_commission',
+                'label' => 'templates.editor.origin_commission',
+                'group' => 'Invoice',
+                'complexity' => 'simple',
+                'content' => '[[ originCommissionFormated ]] €',
+            ],
+            [
+                'id' => 'invoice.origin_payment_fee',
+                'label' => 'templates.editor.origin_payment_fee',
+                'group' => 'Invoice',
+                'complexity' => 'simple',
+                'content' => '[[ originPaymentFeeFormated ]] €',
+            ],
+            [
                 'id' => 'pdf.header',
                 'label' => 'templates.preview.snippet.pdf_header',
                 'group' => 'PDF',
@@ -314,6 +340,11 @@ class InvoiceTemplatePreviewProvider implements ITemplatePreviewProvider
         $periods = $this->invoiceService->getUniqueReservationPeriods($invoice);
         $numbers = $this->invoiceService->getUniqueAppartmentsNumber($invoice);
 
+        // Sample surcharges so a template using the origin placeholders renders
+        // in the preview; a real invoice fills these from its reservation origin.
+        $sampleCommission = round($brutto * 12.0 / 100.0, 2);
+        $samplePaymentFee = round($brutto * 1.4 / 100.0, 2);
+
         $params = [
             'invoice' => $invoice,
             'vats' => $vats,
@@ -325,6 +356,11 @@ class InvoiceTemplatePreviewProvider implements ITemplatePreviewProvider
             'numbers' => $numbers,
             'appartmentTotal' => number_format($appartmentTotal, 2, ',', '.'),
             'miscTotal' => number_format($miscTotal, 2, ',', '.'),
+            'originName' => 'Booking.com',
+            'originCommission' => $sampleCommission,
+            'originCommissionFormated' => number_format($sampleCommission, 2, ',', '.'),
+            'originPaymentFee' => $samplePaymentFee,
+            'originPaymentFeeFormated' => number_format($samplePaymentFee, 2, ',', '.'),
         ];
 
         return $this->appendPreviewMeta($params, $ctx);

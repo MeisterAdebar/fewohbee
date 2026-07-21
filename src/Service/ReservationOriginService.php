@@ -45,7 +45,34 @@ class ReservationOriginService
 
         $origin->setName(trim($request->request->get('name-'.$id)));
 
+        // The two percentages only apply while the origin is flagged as charging
+        // them; without the flag they are cleared, whatever the hidden fields
+        // still carried.
+        if ($request->request->get('surcharge-enabled-'.$id)) {
+            $commission = str_replace(',', '.', trim((string) $request->request->get('commission-'.$id, '')));
+            $origin->setCommissionPercent('' === $commission ? null : $commission);
+
+            $paymentFee = str_replace(',', '.', trim((string) $request->request->get('payment-fee-'.$id, '')));
+            $origin->setPaymentFeePercent('' === $paymentFee ? null : $paymentFee);
+        } else {
+            $origin->setCommissionPercent(null);
+            $origin->setPaymentFeePercent(null);
+        }
+
         return $origin;
+    }
+
+    /**
+     * True when the OTA-fee flag is set but neither percentage was given, so the
+     * origin would be marked as charging fees with no fee to charge.
+     *
+     * @param string $id
+     */
+    public function isSurchargeFlagSetWithoutValue(Request $request, $id, ReservationOrigin $origin): bool
+    {
+        return (bool) $request->request->get('surcharge-enabled-'.$id)
+            && null === $origin->getCommissionPercent()
+            && null === $origin->getPaymentFeePercent();
     }
 
     /**
