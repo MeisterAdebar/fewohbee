@@ -34,6 +34,12 @@ class InvoiceReservationOriginCondition implements WorkflowConditionInterface
         ];
     }
 
+    /**
+     * Matches as soon as ANY reservation on the invoice has the configured
+     * origin - an invoice can carry several reservations, and they need not
+     * share an origin. Actions run on the invoice as a whole afterwards, so
+     * this cannot be used to single out the matching reservation.
+     */
     public function evaluate(array $config, mixed $entity, array $context): bool
     {
         if (!$entity instanceof Invoice) {
