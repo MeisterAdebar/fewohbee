@@ -136,11 +136,6 @@ class CreatePercentageEntryAction implements WorkflowActionInterface
                 // Offered first and preselected: portals charge commission on what
                 // the house earns, and tourist tax is collected for the municipality.
                 'default' => self::AMOUNT_BASE_GROSS_WITHOUT_TOURIST_TAX,
-                // What a config saved before this field existed is doing, so
-                // editing such a workflow shows what it books rather than the
-                // suggestion for new ones - and saving it does not move its base
-                // as a side effect. Kept in step with the fallback in baseAmount().
-                'defaultForExisting' => self::AMOUNT_BASE_GROSS,
             ],
             [
                 'key' => 'debitAccountId',
@@ -324,16 +319,16 @@ class CreatePercentageEntryAction implements WorkflowActionInterface
     /**
      * The amount the percentage is taken of.
      *
-     * Falls back to the full gross for configs saved before the choice existed:
-     * those were set up against that figure, and quietly moving their base would
-     * change what they book from one release to the next. New actions start on
-     * the narrower base instead, see the schema above.
+     * A config that says nothing is treated like a new one, since the field
+     * ships together with this action - only a workflow set up while the branch
+     * was still in the making can lack it, and those are few enough to be looked
+     * over by hand.
      */
     private function baseAmount(array $config, Invoice $invoice): float
     {
         $positions = $invoice->getPositions() ?? new ArrayCollection();
 
-        if (self::AMOUNT_BASE_GROSS_WITHOUT_TOURIST_TAX === (string) ($config['amountBase'] ?? self::AMOUNT_BASE_GROSS)) {
+        if (self::AMOUNT_BASE_GROSS_WITHOUT_TOURIST_TAX === (string) ($config['amountBase'] ?? self::AMOUNT_BASE_GROSS_WITHOUT_TOURIST_TAX)) {
             // Dropped before the sum rather than subtracted afterwards, so the
             // per-VAT-rate rounding inside calculateSums stays the one the
             // remaining positions produce on their own.
