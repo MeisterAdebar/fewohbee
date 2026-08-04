@@ -49,6 +49,37 @@ class InvoicePosition
     #[ORM\Column(name: 'position_group', type: 'string', length: 32, nullable: true)]
     private ?string $positionGroup = null;
 
+    /**
+     * Whether this position was part of the booking a portal brokered.
+     *
+     * False for what the house sells the guest on top once they are there - a
+     * breakfast added at the counter on a portal booking - which the portal
+     * neither brokered nor processed, and which therefore carries none of its
+     * fees. Inherited from the Price the position was made from, so the answer
+     * is given once per service rather than per invoice, and overridable here
+     * for the odd case.
+     *
+     * Recorded on the position rather than looked up later: what a portal
+     * charged is a fact about this invoice, and a price whose flag is changed
+     * next season must not rewrite it.
+     */
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $brokered = true;
+
+    /**
+     * Whether a portal's commission is charged on this position.
+     *
+     * Everything brokered is commissionable, with one exception: a tourist tax
+     * billed as its own position. Booking.com exempts it as long as it is
+     * entered on their side as a separate local tax or as payable on arrival -
+     * which is exactly the tax that shows up as a position of its own here. The
+     * portal may still have collected the money, and then still charges its
+     * payment fee on it, which is why this is a flag of its own rather than the
+     * same one.
+     */
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $commissionable = true;
+
     public function __construct()
     {
         $this->isFlatPrice = false;
@@ -197,6 +228,32 @@ class InvoicePosition
     public function setPositionGroup(?string $positionGroup): self
     {
         $this->positionGroup = $positionGroup;
+
+        return $this;
+    }
+
+    /** Whether this position was part of the booking a portal brokered. */
+    public function isBrokered(): bool
+    {
+        return $this->brokered;
+    }
+
+    public function setBrokered(bool $brokered): self
+    {
+        $this->brokered = $brokered;
+
+        return $this;
+    }
+
+    /** Whether a portal's commission is charged on this position. */
+    public function isCommissionable(): bool
+    {
+        return $this->commissionable;
+    }
+
+    public function setCommissionable(bool $commissionable): self
+    {
+        $this->commissionable = $commissionable;
 
         return $this;
     }
