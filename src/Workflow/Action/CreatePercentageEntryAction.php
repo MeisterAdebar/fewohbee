@@ -54,7 +54,13 @@ class CreatePercentageEntryAction implements WorkflowActionInterface
     /** The percentage is taken of the invoice's full gross total. */
     public const AMOUNT_BASE_GROSS = 'gross';
 
-    /** The percentage is taken of the gross total less the tourist-tax positions. */
+    /**
+     * The percentage is taken of the gross total less what carries no commission
+     * - a separately billed tourist tax, and anything the house sells on site.
+     * The stored value still names the tourist tax alone, which is what the
+     * option meant when it was written and what it still amounts to on invoices
+     * from back then; the positions now say it for themselves.
+     */
     public const AMOUNT_BASE_GROSS_WITHOUT_TOURIST_TAX = 'gross_without_tourist_tax';
 
     public function __construct(

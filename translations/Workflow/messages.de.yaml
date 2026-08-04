@@ -61,7 +61,7 @@ workflow:
     percentage_entry_percent: "Prozentsatz (manuell)"
     percentage_entry_percent_help: "Anteil an der gewählten Berechnungsgrundlage, z.B. 12 für eine Kommission oder 1,4 für eine Zahlungsgebühr. Nur wirksam, wenn die Quelle „Manuell“ ist. Ohne einschränkende Bedingung wird auf jede Rechnung gebucht."
     percentage_entry_amount_base: "Berechnungsgrundlage"
-    percentage_entry_amount_base_help: "Betrag, auf den ein selbst eingetragener Prozentsatz angewendet wird. Für Kommission und Zahlungsgebühr aus der Buchungsherkunft gilt diese Einstellung nicht: worauf ein Portal sie berechnet, ergibt sich aus der Buchung. Die Kommission lässt dabei auf der Rechnung ausgewiesene Beherbergungsabgaben wie die Kurtaxe außen vor, die Zahlungsgebühr nicht - das Portal wickelt den vollen Betrag ab."
+    percentage_entry_amount_base_help: "Betrag, auf den ein selbst eingetragener Prozentsatz angewendet wird. Für Kommission und Zahlungsgebühr aus der Buchungsherkunft gilt diese Einstellung nicht: worauf ein Portal sie berechnet, ergibt sich aus der Buchung. Die Kommission lässt dabei aus, was keine Kommission trägt - eine separat ausgewiesene Kurtaxe und vor Ort verkaufte Leistungen; die Zahlungsgebühr richtet sich danach, was das Portal abgewickelt hat. Beides steht an den Rechnungspositionen und der Buchungsherkunft."
     percentage_entry_amount_base_without_tourist_tax: "Rechnungsbrutto ohne Beherbergungsabgaben"
     percentage_entry_amount_base_gross: "Vollständiges Rechnungsbrutto"
     percentage_entry_debit_account: "Sollkonto"
