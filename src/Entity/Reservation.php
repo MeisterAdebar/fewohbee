@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Entity\Enum\PaymentCollection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -65,6 +66,18 @@ class Reservation
     /** The portal's payment fee when this reservation was booked; see commission. */
     #[ORM\Column(name: 'payment_fee_percent', type: 'decimal', precision: 5, scale: 2, nullable: true)]
     private ?string $paymentFeePercent = null;
+
+    /**
+     * Who collected the payment for this booking, pinned from the origin the
+     * same way the two rates are - a portal that switches to collecting
+     * payments itself must not change what happened to bookings settled before.
+     *
+     * Null where nothing is recorded: bookings that predate the column, and any
+     * without an origin. Those fall back to the origin, which answers for the
+     * house where there is none.
+     */
+    #[ORM\Column(name: 'payment_collection', type: 'string', length: 16, enumType: PaymentCollection::class, nullable: true)]
+    private ?PaymentCollection $paymentCollection = null;
     #[ORM\OneToMany(targetEntity: 'Correspondence', mappedBy: 'reservation', cascade: ['remove'])]
     private $correspondences;
     #[ORM\ManyToMany(targetEntity: Price::class)]
@@ -321,6 +334,10 @@ class Reservation
         if ($reservationOrigin !== $this->reservationOrigin) {
             $this->commissionPercent = $this->pinnedRate($reservationOrigin?->getCommissionPercent());
             $this->paymentFeePercent = $this->pinnedRate($reservationOrigin?->getPaymentFeePercent());
+            // Unlike the rates this is never blank - an origin always answers
+            // who collects - so it is pinned as it stands, and only a booking
+            // without an origin at all is left with nothing recorded.
+            $this->paymentCollection = $reservationOrigin?->getPaymentCollection();
         }
 
         $this->reservationOrigin = $reservationOrigin;
@@ -367,6 +384,22 @@ class Reservation
     public function setPaymentFeePercent(?string $paymentFeePercent): self
     {
         $this->paymentFeePercent = $paymentFeePercent;
+
+        return $this;
+    }
+
+    /**
+     * Who collected the payment for this booking, null when nothing was
+     * recorded - then the origin answers, see the property.
+     */
+    public function getPaymentCollection(): ?PaymentCollection
+    {
+        return $this->paymentCollection;
+    }
+
+    public function setPaymentCollection(?PaymentCollection $paymentCollection): self
+    {
+        $this->paymentCollection = $paymentCollection;
 
         return $this;
     }
