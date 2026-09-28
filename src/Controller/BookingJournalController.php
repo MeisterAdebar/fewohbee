@@ -14,6 +14,7 @@ use App\Repository\AccountingAccountRepository;
 use App\Repository\AccountingSettingsRepository;
 use App\Repository\BookingBatchRepository;
 use App\Repository\BookingEntryRepository;
+use App\Repository\ReceiptProposalRepository;
 use App\Service\BookingJournal\AccountingSettingsService;
 use App\Service\BookingJournal\BookingJournalService;
 use App\Service\JournalExport\DatevExportService;
@@ -37,7 +38,7 @@ class BookingJournalController extends AbstractController
     private const PER_PAGE = 40;
 
     #[Route('', name: 'journal.overview', methods: ['GET'])]
-    public function index(BookingBatchRepository $batchRepo): Response
+    public function index(BookingBatchRepository $batchRepo, ReceiptProposalRepository $receiptProposalRepo): Response
     {
         $years = $batchRepo->getAvailableYears();
         $currentYear = count($years) > 0 ? $years[0]['year'] : (int) date('Y');
@@ -45,6 +46,7 @@ class BookingJournalController extends AbstractController
         return $this->render('BookingJournal/index.html.twig', [
             'years' => $years,
             'currentYear' => $currentYear,
+            'openReceiptProposals' => $receiptProposalRepo->countOpen(),
         ]);
     }
 

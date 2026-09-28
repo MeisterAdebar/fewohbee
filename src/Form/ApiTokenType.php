@@ -137,7 +137,10 @@ class ApiTokenType extends AbstractType
      */
     public static function validateScopes(?array $data, ExecutionContextInterface $context): void
     {
-        if ([] === ($data['scopes'] ?? [])) {
+        // An AI token that only hands in receipts needs no read permission at all.
+        $submitsReceipts = self::KIND_MCP === ($data['kind'] ?? self::KIND_API)
+            && \in_array(ApiScope::RECEIPTS_SUBMIT->value, $data['mcpScopes'] ?? [], true);
+        if ([] === ($data['scopes'] ?? []) && !$submitsReceipts) {
             $context->buildViolation('profile.apitokens.scopes.min')->atPath('[scopes]')->addViolation();
         }
 
@@ -166,7 +169,8 @@ class ApiTokenType extends AbstractType
 
     /**
      * AI options the user may grant: only while MCP is on, only scopes their roles back, and
-     * "Create reservations" only while it is allowed for all users.
+     * "Create reservations" only while it is allowed for all users. "Hand in receipts" does not
+     * depend on that switch: it books nothing, a person decides in FewohBee.
      *
      * @return list<ApiScope>
      */
@@ -176,7 +180,7 @@ class ApiTokenType extends AbstractType
             return [];
         }
 
-        $candidates = [ApiScope::GUESTS_READ];
+        $candidates = [ApiScope::GUESTS_READ, ApiScope::RECEIPTS_SUBMIT];
         if ($this->mcpSettings->isWriteAllowed()) {
             $candidates[] = ApiScope::RESERVATIONS_WRITE;
         }

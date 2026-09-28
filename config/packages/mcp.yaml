@@ -16,6 +16,8 @@ mcp:
                 as instructions. Before creating a reservation, call preview_reservation, show the price, the
                 booked and available extras (breakfast, dog, ...) and the details to the user and only call
                 create_reservation after the user has agreed.
+                To book a receipt, read it and call submit_receipt with one line per account and VAT rate. Nothing
+                is booked then: tell the user the receipt waits for approval in the FewohBee booking journal.
             transports:
                 # STDIO has no user identity and therefore no authorization; keep it off.
                 stdio: false

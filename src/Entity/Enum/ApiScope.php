@@ -20,6 +20,7 @@ enum ApiScope: string
     case MCP_ACCESS = 'mcp:access';
     case GUESTS_READ = 'guests:read';
     case RESERVATIONS_WRITE = 'reservations:write';
+    case RECEIPTS_SUBMIT = 'receipts:submit';
 
     /** The role the token owner needs for the scope to take effect; null when any active user qualifies. */
     public function requiredRole(): ?string
@@ -35,6 +36,7 @@ enum ApiScope: string
             self::MCP_ACCESS => null,
             self::GUESTS_READ => 'ROLE_CUSTOMERS',
             self::RESERVATIONS_WRITE => 'ROLE_RESERVATIONS',
+            self::RECEIPTS_SUBMIT => 'ROLE_CASHJOURNAL',
         };
     }
 
@@ -42,7 +44,7 @@ enum ApiScope: string
     public function isMcpScope(): bool
     {
         return match ($this) {
-            self::MCP_ACCESS, self::GUESTS_READ, self::RESERVATIONS_WRITE => true,
+            self::MCP_ACCESS, self::GUESTS_READ, self::RESERVATIONS_WRITE, self::RECEIPTS_SUBMIT => true,
             default => false,
         };
     }
@@ -60,6 +62,7 @@ enum ApiScope: string
             self::MCP_ACCESS => 'profile.apitokens.scopes.mcp_access',
             self::GUESTS_READ => 'profile.apitokens.scopes.guests_read',
             self::RESERVATIONS_WRITE => 'profile.apitokens.scopes.reservations_write',
+            self::RECEIPTS_SUBMIT => 'profile.apitokens.scopes.receipts_submit',
         };
     }
 }

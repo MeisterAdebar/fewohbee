@@ -28,6 +28,7 @@ class ApiScopeVoter extends Voter
     public const MCP_ACCESS = 'API_SCOPE_MCP_ACCESS';
     public const GUESTS_READ = 'API_SCOPE_GUESTS_READ';
     public const RESERVATIONS_WRITE = 'API_SCOPE_RESERVATIONS_WRITE';
+    public const RECEIPTS_SUBMIT = 'API_SCOPE_RECEIPTS_SUBMIT';
 
     private const ATTRIBUTE_SCOPES = [
         self::RESERVATIONS_READ => ApiScope::RESERVATIONS_READ,
@@ -40,6 +41,7 @@ class ApiScopeVoter extends Voter
         self::MCP_ACCESS => ApiScope::MCP_ACCESS,
         self::GUESTS_READ => ApiScope::GUESTS_READ,
         self::RESERVATIONS_WRITE => ApiScope::RESERVATIONS_WRITE,
+        self::RECEIPTS_SUBMIT => ApiScope::RECEIPTS_SUBMIT,
     ];
 
     public function __construct(

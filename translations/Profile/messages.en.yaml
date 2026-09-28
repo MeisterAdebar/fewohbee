@@ -54,6 +54,7 @@ profile:
       mcp_access: AI assistant (MCP)
       guests_read: Share guest data (names, contact details, remarks)
       reservations_write: Create reservations
+      receipts_submit: Hand in receipts (booking proposals, booked only after your approval in the booking journal)
     kind:
       label: Use
       api: REST API and calendar clients
