@@ -161,19 +161,34 @@ class ReceiptProposalService
      * statement was imported. paymentCandidates() only finds a payment still booked in one
      * piece; without this, such a receipt would look unbooked and be booked a second time.
      *
-     * Two signs, both around the receipt date and against a cash or bank account:
+     * The receipt number decides when there is one: entries carrying it (within a year of the
+     * receipt date) are the booking, and only those are returned. Otherwise, around the receipt
+     * date and against a cash or bank account:
      * - the booking text names the supplier ("Philipps" for "Thomas Philipps");
      * - several entries of one split group, or of one day and payment account, add up to the
      *   receipt total.
-     *
-     * A payment offered for splitting is left out even when it names the supplier: splitting it
-     * is exactly what should happen.
+     * An entry with a different receipt number belongs to another receipt and is left out, and
+     * so is a payment offered for splitting: splitting it is exactly what should happen.
      *
      * @return list<BookingEntry> ordered by date
      */
     public function possiblyBookedAlready(ReceiptProposal $proposal): array
     {
         $date = $proposal->getReceiptDate();
+        $toSplit = array_map(static fn (BookingEntry $entry): ?int => $entry->getId(), $this->paymentCandidates($proposal));
+        $number = self::normalizeNumber($proposal->getReceiptNumber());
+
+        if (null !== $number) {
+            $sameNumber = array_filter(
+                $this->entryRepository->findWithInvoiceNumberContaining(ltrim(trim((string) $proposal->getReceiptNumber()), '0'), $date->modify('-1 year'), $date->modify('+1 year')),
+                static fn (BookingEntry $entry): bool => $number === self::normalizeNumber($entry->getInvoiceNumber())
+                    && !\in_array($entry->getId(), $toSplit, true),
+            );
+            if ([] !== $sameNumber) {
+                return self::byDate($sameNumber);
+            }
+        }
+
         $entries = array_filter(
             $this->entryRepository->findInPeriod(
                 $date->modify('-'.self::PAYMENT_DAYS_BEFORE.' days'),
@@ -182,11 +197,11 @@ class ReceiptProposalService
                 null,
                 500,
             ),
-            static fn (BookingEntry $entry): bool => !$entry->isOpeningBalance() && null !== self::paymentAccount($entry),
+            static fn (BookingEntry $entry): bool => !$entry->isOpeningBalance()
+                && null !== self::paymentAccount($entry)
+                && !\in_array($entry->getId(), $toSplit, true)
+                && (null === $number || null === self::normalizeNumber($entry->getInvoiceNumber())),
         );
-
-        $toSplit = array_map(static fn (BookingEntry $entry): ?int => $entry->getId(), $this->paymentCandidates($proposal));
-        $entries = array_filter($entries, static fn (BookingEntry $entry): bool => !\in_array($entry->getId(), $toSplit, true));
 
         $found = [];
         $words = self::supplierWords($proposal->getSupplier());
@@ -216,10 +231,7 @@ class ReceiptProposalService
             }
         }
 
-        $found = array_values($found);
-        usort($found, static fn (BookingEntry $a, BookingEntry $b): int => [$a->getDate(), $a->getId()] <=> [$b->getDate(), $b->getId()]);
-
-        return $found;
+        return self::byDate($found);
     }
 
     /**
@@ -297,6 +309,27 @@ class ReceiptProposalService
         $words = preg_split('/[\s,&\/()-]+/u', mb_strtolower($supplier)) ?: [];
 
         return array_values(array_filter($words, static fn (string $word): bool => mb_strlen($word) >= 4 && !\in_array($word, $ignored, true)));
+    }
+
+    /**
+     * @param array<BookingEntry> $entries
+     *
+     * @return list<BookingEntry>
+     */
+    private static function byDate(array $entries): array
+    {
+        $entries = array_values($entries);
+        usort($entries, static fn (BookingEntry $a, BookingEntry $b): int => [$a->getDate(), $a->getId()] <=> [$b->getDate(), $b->getId()]);
+
+        return $entries;
+    }
+
+    /** "0921", " 921" and "921" are the same receipt number; empty means none. */
+    private static function normalizeNumber(?string $number): ?string
+    {
+        $number = ltrim(mb_strtolower((string) preg_replace('/\s+/u', '', (string) $number)), '0');
+
+        return '' === $number ? null : $number;
     }
 
     private static function cents(string $amount): int

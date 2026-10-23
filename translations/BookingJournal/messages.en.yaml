@@ -320,7 +320,7 @@ accounting.receipt_proposal.payment_choice: Which payment does the receipt belon
 accounting.receipt_proposal.payment_choice_help: "FewohBee looked for entries of the same amount around the receipt date. Pick the matching one and it will be split. If there is none, book the receipt anew."
 accounting.receipt_proposal.split_entry: "Split the entry of %date% over %amount% (%debit% to %credit%)"
 accounting.receipt_proposal.booked_already.title: Possibly booked already
-accounting.receipt_proposal.booked_already.text: "Around the receipt date there are entries that fit this receipt: they name the supplier or add up to the receipt total."
+accounting.receipt_proposal.booked_already.text: "The journal has entries that fit this receipt: they carry the same receipt number, name the supplier or add up to the receipt total."
 accounting.receipt_proposal.booked_already.hint: "If they belong to this receipt, discard the proposal. Booked anew, the purchase would be in the journal twice."
 accounting.receipt_proposal.no_candidates: "No matching payment is in the journal. If it still comes with a bank statement, book the receipt after the import, otherwise the payment ends up in the journal twice."
 accounting.receipt_proposal.book_new: "Book anew against %account% on %date%"

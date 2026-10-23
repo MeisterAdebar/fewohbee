@@ -219,6 +219,37 @@ final class ReceiptProposalTest extends WebTestCase
         ));
     }
 
+    /** The receipt number decides: only entries carrying it are flagged, "0921" matching "921". */
+    public function testTheReceiptNumberPicksTheBookedEntriesAndLeavesOtherReceiptsOut(): void
+    {
+        $this->bookEntry('2031-02-18', '31.22', debit: '4200', credit: '1200', remark: 'Philipps', invoiceNumber: '0922');
+        $this->bookEntry('2031-02-19', '89.81', debit: '4980', credit: '1200', remark: 'Philipps', invoiceNumber: '921');
+        $this->bookEntry('2031-02-19', '3.48', debit: '4200', credit: '1200', remark: 'Philipps', invoiceNumber: '0921');
+        $proposal = $this->propose('Thomas Philipps', '2031-02-17', '93.29', 'bank', [['4200', '89.81', '19'], ['4200', '3.48', '7']], receiptNumber: '0921');
+        $this->client->loginUser($this->createUserWithToken(['ROLE_CASHJOURNAL'], [])[0]);
+
+        $rows = $this->client->request('GET', '/journal/receipts/'.$proposal)->filter('.alert-warning tbody tr');
+
+        self::assertCount(2, $rows);
+        self::assertStringContainsString('89,81', $rows->eq(0)->text());
+        self::assertStringContainsString('3,48', $rows->eq(1)->text());
+    }
+
+    /** With a receipt number nobody booked yet, entries of other receipts no longer count by name. */
+    public function testAnUnbookedReceiptNumberIgnoresEntriesOfOtherReceipts(): void
+    {
+        $this->bookEntry('2031-02-18', '31.22', debit: '4200', credit: '1200', remark: 'Philipps', invoiceNumber: '0922');
+        $this->bookEntry('2031-02-19', '4.99', debit: '4200', credit: '1200', remark: 'Philipps');
+        $proposal = $this->propose('Thomas Philipps', '2031-02-17', '93.29', 'bank', [['4200', '93.29', '19']], receiptNumber: '0930');
+        $this->client->loginUser($this->createUserWithToken(['ROLE_CASHJOURNAL'], [])[0]);
+
+        $rows = $this->client->request('GET', '/journal/receipts/'.$proposal)->filter('.alert-warning tbody tr');
+
+        // Only the entry without a number may still be this receipt.
+        self::assertCount(1, $rows);
+        self::assertStringContainsString('4,99', $rows->text());
+    }
+
     /** Entries that add up to the receipt are flagged even when their text does not name the supplier. */
     public function testEntriesAddingUpToTheReceiptAreFlaggedWithoutTheSupplierName(): void
     {
@@ -356,12 +387,12 @@ final class ReceiptProposalTest extends WebTestCase
     /**
      * @param list<array{0: string, 1: string, 2: string}> $lines account, amount, VAT rate
      */
-    private function propose(string $supplier, string $date, string $total, string $payment, array $lines): int
+    private function propose(string $supplier, string $date, string $total, string $payment, array $lines, ?string $receiptNumber = null): int
     {
         $proposal = new ReceiptProposal(
             $supplier,
             new \DateTimeImmutable($date),
-            null,
+            $receiptNumber,
             $total,
             $payment,
             array_map(static fn (array $line): array => ['text' => null, 'amount' => $line[1], 'taxRate' => $line[2], 'accountNumber' => $line[0]], $lines),
@@ -377,7 +408,7 @@ final class ReceiptProposalTest extends WebTestCase
     }
 
     /** Books one entry the way the bank import or the cash journal form would, and returns its id. */
-    private function bookEntry(string $date, string $amount, string $debit, string $credit, string $remark = 'Kartenzahlung'): int
+    private function bookEntry(string $date, string $amount, string $debit, string $credit, string $remark = 'Kartenzahlung', ?string $invoiceNumber = null): int
     {
         $em = $this->em();
         $accounts = $em->getRepository(AccountingAccount::class);
@@ -387,7 +418,7 @@ final class ReceiptProposalTest extends WebTestCase
             $accounts->findOneBy(['accountNumber' => $debit, 'chartPreset' => 'skr03']),
             $accounts->findOneBy(['accountNumber' => $credit, 'chartPreset' => 'skr03']),
             $remark,
-            null,
+            $invoiceNumber,
             null,
             null,
             $em->getRepository(TaxRate::class)->findOneBy(['rate' => '0.00', 'chartPreset' => 'skr03']),

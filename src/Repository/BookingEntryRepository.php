@@ -323,6 +323,26 @@ class BookingEntryRepository extends ServiceEntityRepository
     }
 
     /**
+     * Entries dated within a range whose invoice number contains the given text; the caller
+     * compares the numbers exactly.
+     *
+     * @return BookingEntry[]
+     */
+    public function findWithInvoiceNumberContaining(string $text, \DateTimeInterface $from, \DateTimeInterface $to, int $limit = 50): array
+    {
+        return $this->createQueryBuilder('e')
+            ->where('e.invoiceNumber LIKE :text')
+            ->andWhere('e.date BETWEEN :from AND :to')
+            ->setParameter('text', '%'.addcslashes($text, '%_\\').'%')
+            ->setParameter('from', $from->format('Y-m-d'))
+            ->setParameter('to', $to->format('Y-m-d'))
+            ->orderBy('e.date', 'ASC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Returns the highest document number used in the given batch's year, or 0 if no entries exist.
      */
     public function getLastDocumentNumber(BookingBatch $batch): int
