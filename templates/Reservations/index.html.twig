@@ -64,7 +64,7 @@
             {% else %}
                 {% include 'Reservations/_index_yearly_form.html.twig' %}
             {% endif %}
-            <div class="col-auto">
+            <div class="col-auto reservations-add-column">
                 {% if is_granted('ROLE_RESERVATIONS') %}
                 {% if conflictCount > 0 %}
                     {% set alertClass = hasConflicts ? 'btn-outline-danger' : 'btn-outline-warning' %}

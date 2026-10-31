@@ -587,7 +587,7 @@ body.reservations-week-fit #flash-message-container {
     }
 
     /* The column of the inline add button is empty here unless there are conflicts */
-    #table-filter > .row > .col-auto:not(:has(> a)) {
+    .reservations-add-column:not(:has(> a)) {
         display: none;
     }
 
