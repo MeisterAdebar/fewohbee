@@ -484,7 +484,7 @@ final class PublicGuestCheckInControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(303);
         $this->em()->clear();
         $checkIn = $this->checkIn();
-        self::assertSame([['id' => $this->extraPriceId, 'description' => 'Breakfast', 'total' => '30.00']], $checkIn->getPayload()['extras'] ?? null);
+        $this->assertBreakfastIsTheOnlyExtra($checkIn);
         self::assertCount(0, $checkIn->getReservation()->getPrices());
 
         $this->em()->getRepository(GuestCheckInConfig::class)->findOneBy([])?->setExtrasEnabled(false);
@@ -495,7 +495,7 @@ final class PublicGuestCheckInControllerTest extends WebTestCase
         $this->client->submit($crawler->filter('form[name="guest_check_in"]')->form());
         self::assertResponseStatusCodeSame(303);
         $this->em()->clear();
-        self::assertSame([['id' => $this->extraPriceId, 'description' => 'Breakfast', 'total' => '30.00']], $this->checkIn()->getPayload()['extras'] ?? null);
+        $this->assertBreakfastIsTheOnlyExtra($this->checkIn());
 
         $this->em()->getRepository(GuestCheckInConfig::class)->findOneBy([])?->setExtrasEnabled(true);
         $this->em()->flush();
@@ -735,6 +735,15 @@ final class PublicGuestCheckInControllerTest extends WebTestCase
         self::assertIsString($url);
 
         return (string) parse_url($url, \PHP_URL_PATH);
+    }
+
+    private function assertBreakfastIsTheOnlyExtra(GuestCheckIn $checkIn): void
+    {
+        $extras = $checkIn->getPayload()['extras'] ?? [];
+        self::assertCount(1, $extras);
+        // MySQL JSON columns do not keep the key order.
+        ksort($extras[0]);
+        self::assertSame(['description' => 'Breakfast', 'id' => $this->extraPriceId, 'total' => '30.00'], $extras[0]);
     }
 
     private function checkIn(): GuestCheckIn

@@ -300,7 +300,7 @@ final class GuestCheckInAdminControllerTest extends WebTestCase
         ];
         $payload['companions'] = [['firstname' => 'Max', 'lastname' => 'Fernau', 'birthday' => '2015-03-03']];
         $checkIn->recordSubmission($payload, new \DateTimeImmutable());
-        $this->em()->flush();
+        $this->flushAndForget();
         $this->loginAdmin();
 
         $crawler = $this->client->request('GET', '/reservation/get/'.$reservation->getId(), ['tab' => 'checkin']);
@@ -343,7 +343,7 @@ final class GuestCheckInAdminControllerTest extends WebTestCase
             'salutation' => 'Ms', 'firstname' => 'Maxi', 'lastname' => 'Musterfrau', 'birthday' => '1995-06-15',
         ]];
         $checkIn->recordSubmission($payload, new \DateTimeImmutable());
-        $this->em()->flush();
+        $this->flushAndForget();
         $this->loginAdmin();
 
         $crawler = $this->client->request('GET', '/reservation/get/'.$reservation->getId(), ['tab' => 'checkin']);
@@ -410,7 +410,7 @@ final class GuestCheckInAdminControllerTest extends WebTestCase
         $payload['mainGuest'] = ['firstname' => 'Lea', 'lastname' => 'Fernau', 'birthday' => '1990-01-01', 'email' => 'lea@example.com'];
         $payload['companions'] = [];
         $checkIn->recordSubmission($payload, new \DateTimeImmutable());
-        $this->em()->flush();
+        $this->flushAndForget();
         $this->loginAdmin();
 
         $crawler = $this->client->request('GET', '/reservation/get/'.$reservation->getId(), ['tab' => 'checkin']);
@@ -890,6 +890,16 @@ final class GuestCheckInAdminControllerTest extends WebTestCase
         $this->em()->clear();
 
         return $this->em()->getRepository(MailCorrespondence::class)->findBy(['reservation' => $reservation->getId()]);
+    }
+
+    /**
+     * Makes the following request read the payload from the database. MySQL JSON columns reorder
+     * keys, so a page rendered from the object in memory would show a different submission version.
+     */
+    private function flushAndForget(): void
+    {
+        $this->em()->flush();
+        $this->em()->clear();
     }
 
     private function em(): EntityManagerInterface
