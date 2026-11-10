@@ -1,5 +1,6 @@
 {% extends 'base.html.twig' %}
 {% use "common/delete_popover.html.twig" %}
+{% import _self as journal %}
 
 {% block title %}
     {{ parent() }} - {{ 'nav.journal'|trans }} - {{ getLocalizedMonth(batch.month, 'MMMM', app.request.locale) }} {{ batch.year }}
@@ -10,33 +11,10 @@
 {% endblock %}
 
 {% block content %}
-<div class="container fab-add-clearance" data-controller="booking-journal swipe-nav">
-    <div class="row mb-2">
-        <div class="col text-end">
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i class="fas fa-download"></i> {{ 'accounting.journal.export'|trans }}
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                        <a class="dropdown-item"
-                           href="{{ path('journal.batch.export.datev', {'id': batch.id}) }}"
-                           data-turbo="false"
-                           data-turbo-prefetch="false">
-                            <i class="fas fa-file-csv"></i> {{ 'accounting.journal.export.datev'|trans }}
-                        </a>
-                    </li>
-                    {% for tmpl in pdfTemplates %}
-                        <li>
-                            <a class="dropdown-item" href="{{ path('journal.batch.export.pdf', {'id': batch.id, 'templateId': tmpl.id}) }}" target="_blank">
-                                <i class="fas fa-file-pdf"></i> {{ tmpl.name }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-    </div>
+{# fit-rows: as many entries per page as fit the screen, see ListPageSizeService #}
+<div class="container fit-rows-fluid fit-rows" data-controller="booking-journal swipe-nav fit-rows"
+     data-fit-rows-cookie-value="journal_rows" data-fit-rows-per-page-value="{{ perPage }}"
+     data-fit-rows-page-value="{{ page }}" data-fit-rows-total-value="{{ total }}">
     <div class="row justify-content-between mb-3">
         <div class="col d-flex align-items-center gap-3 flex-wrap">
             <h4 class="mb-0 text-nowrap">{{ getLocalizedMonth(batch.month, 'MMMM', app.request.locale) }} {{ batch.year }}</h4>
@@ -47,7 +25,7 @@
                 <option value="bankbook"{% if filter == 'bankbook' %} selected{% endif %}>{{ 'accounting.journal.filter.bankbook'|trans }}</option>
             </select>
         </div>
-        <div class="col-auto d-flex gap-2 align-items-center">
+        <div class="col-auto d-flex flex-wrap gap-2 align-items-center">
             {% if batch.closed %}
                 <span class="badge bg-secondary"><i class="fas fa-lock"></i> {{ 'accounting.journal.batch.closed'|trans }}</span>
             {% endif %}
@@ -82,6 +60,29 @@
                     </button>
                 </form>
             {% endif %}
+            {# In the heading row rather than a row of its own: the rows below get the height #}
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-download"></i> {{ 'accounting.journal.export'|trans }}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item"
+                           href="{{ path('journal.batch.export.datev', {'id': batch.id}) }}"
+                           data-turbo="false"
+                           data-turbo-prefetch="false">
+                            <i class="fas fa-file-csv"></i> {{ 'accounting.journal.export.datev'|trans }}
+                        </a>
+                    </li>
+                    {% for tmpl in pdfTemplates %}
+                        <li>
+                            <a class="dropdown-item" href="{{ path('journal.batch.export.pdf', {'id': batch.id, 'templateId': tmpl.id}) }}" target="_blank">
+                                <i class="fas fa-file-pdf"></i> {{ tmpl.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -93,41 +94,41 @@
             <div class="col-auto"><strong>{{ 'accounting.journal.bankbook.end'|trans }}:</strong> {{ bankClosingBalance|number_format(2, ',', '.') }} &euro;</div>
         </div>
         <div class="table-responsive">
-            <table class="table table-bordered table-hover table-sm">
+            <table class="table table-bordered table-hover table-sm fit-rows-table journal-entries-table">
                 <thead>
                 <tr>
                     <th>{{ 'accounting.journal.entry.date'|trans }}</th>
-                    <th>{{ 'accounting.journal.entry.doc_number'|trans }}</th>
+                    <th class="journal-doc-number">{{ 'accounting.journal.entry.doc_number'|trans }}</th>
                     <th class="text-end">{{ 'accounting.journal.bankbook.incomes'|trans }}</th>
                     <th class="text-end">{{ 'accounting.journal.bankbook.expenses'|trans }}</th>
-                    <th>{{ 'accounting.journal.bankbook.counter_account'|trans }}</th>
+                    <th class="fit-rows-cut">{{ 'accounting.journal.bankbook.counter_account'|trans }}</th>
                     <th class="d-none d-md-table-cell">{{ 'accounting.journal.entry.tax_rate'|trans }}</th>
                     <th class="d-none d-md-table-cell">{{ 'accounting.journal.entry.invoice'|trans }}</th>
-                    <th>{{ 'accounting.journal.entry.remark'|trans }}</th>
+                    <th class="journal-text">{{ 'accounting.journal.entry.remark'|trans }}</th>
                     <th></th>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody data-fit-rows-target="rows">
                 {% for entry in entries %}
                     {% set isIncome = entry.debitAccount and entry.debitAccount.bankAccount %}
                     {% set isExpense = entry.creditAccount and entry.creditAccount.bankAccount %}
                     <tr>
-                        <td>{{ entry.date|date('d.m.Y') }}</td>
-                        <td>{{ '%04d'|format(entry.documentNumber) }}</td>
+                        <td>{{ entry.date|date('d.m.') }}<span class="journal-date-year">{{ entry.date|date('Y') }}</span></td>
+                        <td class="journal-doc-number">{{ '%04d'|format(entry.documentNumber) }}</td>
                         <td class="text-end">{{ isIncome ? entry.amountFloat|abs|number_format(2, ',', '.') : '' }}</td>
                         <td class="text-end">{{ isExpense ? entry.amountFloat|abs|number_format(2, ',', '.') : '' }}</td>
-                        <td>
+                        <td class="fit-rows-cut">
                             {% if isIncome and entry.creditAccount %}
-                                {{ entry.creditAccount.label }}
+                                {{ journal.account(entry.creditAccount) }}
                             {% elseif isExpense and entry.debitAccount %}
-                                {{ entry.debitAccount.label }}
+                                {{ journal.account(entry.debitAccount) }}
                             {% else %}
                                 {{ entry.counterAccountLegacy ?? '-' }}
                             {% endif %}
                         </td>
                         <td class="d-none d-md-table-cell">{{ entry.taxRate ? entry.taxRate.name : '-' }}</td>
                         <td class="d-none d-md-table-cell">{% if entry.missingDocumentNumber %}<span class="badge text-bg-warning" title="{{ 'accounting.journal.entry.missing_document_hint'|trans }}">{{ 'accounting.journal.entry.missing_document'|trans }}</span>{% else %}{{ entry.invoiceNumber ?? '-' }}{% endif %}</td>
-                        <td>{{ entry.remark ?? '' }}</td>
+                        <td class="journal-text">{{ entry.remark ?? '' }}</td>
                         <td>
                             {% if not batch.closed %}
                                 <button type="button" class="btn btn-sm btn-link p-0 border-0"
@@ -169,39 +170,39 @@
             <div class="col-auto"><strong>{{ 'accounting.journal.cashbook.end'|trans }}:</strong> {{ batch.cashEnd|number_format(2, ',', '.') }} &euro;</div>
         </div>
         <div class="table-responsive">
-            <table class="table table-bordered table-hover table-sm">
+            <table class="table table-bordered table-hover table-sm fit-rows-table journal-entries-table">
                 <thead>
                 <tr>
                     <th>{{ 'accounting.journal.entry.date'|trans }}</th>
-                    <th>{{ 'accounting.journal.entry.doc_number'|trans }}</th>
+                    <th class="journal-doc-number">{{ 'accounting.journal.entry.doc_number'|trans }}</th>
                     <th class="text-end">{{ 'accounting.journal.cashbook.incomes'|trans }}</th>
                     <th class="text-end">{{ 'accounting.journal.cashbook.expenses'|trans }}</th>
-                    <th>{{ 'accounting.journal.cashbook.counter_account'|trans }}</th>
+                    <th class="fit-rows-cut">{{ 'accounting.journal.cashbook.counter_account'|trans }}</th>
                     <th class="d-none d-md-table-cell">{{ 'accounting.journal.entry.invoice'|trans }}</th>
-                    <th>{{ 'accounting.journal.entry.remark'|trans }}</th>
+                    <th class="journal-text">{{ 'accounting.journal.entry.remark'|trans }}</th>
                     <th></th>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody data-fit-rows-target="rows">
                 {% for entry in entries %}
                     {% set isIncome = entry.debitAccount and entry.debitAccount.cashAccount %}
                     {% set isExpense = entry.creditAccount and entry.creditAccount.cashAccount %}
                     <tr>
-                        <td>{{ entry.date|date('d.m.Y') }}</td>
-                        <td>{{ '%04d'|format(entry.documentNumber) }}</td>
+                        <td>{{ entry.date|date('d.m.') }}<span class="journal-date-year">{{ entry.date|date('Y') }}</span></td>
+                        <td class="journal-doc-number">{{ '%04d'|format(entry.documentNumber) }}</td>
                         <td class="text-end">{{ isIncome ? entry.amountFloat|abs|number_format(2, ',', '.') : '' }}</td>
                         <td class="text-end">{{ isExpense ? entry.amountFloat|abs|number_format(2, ',', '.') : '' }}</td>
-                        <td>
+                        <td class="fit-rows-cut">
                             {% if isIncome and entry.creditAccount %}
-                                {{ entry.creditAccount.label }}
+                                {{ journal.account(entry.creditAccount) }}
                             {% elseif isExpense and entry.debitAccount %}
-                                {{ entry.debitAccount.label }}
+                                {{ journal.account(entry.debitAccount) }}
                             {% else %}
                                 {{ entry.counterAccountLegacy ?? '-' }}
                             {% endif %}
                         </td>
                         <td class="d-none d-md-table-cell">{% if entry.missingDocumentNumber %}<span class="badge text-bg-warning" title="{{ 'accounting.journal.entry.missing_document_hint'|trans }}">{{ 'accounting.journal.entry.missing_document'|trans }}</span>{% else %}{{ entry.invoiceNumber ?? '-' }}{% endif %}</td>
-                        <td>{{ entry.remark ?? '' }}</td>
+                        <td class="journal-text">{{ entry.remark ?? '' }}</td>
                         <td>
                             {% if not batch.closed %}
                                 <button type="button" class="btn btn-sm btn-link p-0 border-0"
@@ -238,32 +239,40 @@
         </div>
     {% else %}
         {# ── Journal view (all entries) ── #}
+        {# On touch screens debit and credit share the room left by the other columns in
+           proportion to their longest label on the page, see app.css #}
+        {% set debitChars = 1 %}
+        {% set creditChars = 1 %}
+        {% for entry in entries %}
+            {% set debitChars = max(debitChars, (entry.debitAccount ? entry.debitAccount.label : (entry.counterAccountLegacy ?? '-'))|length) %}
+            {% set creditChars = max(creditChars, (entry.creditAccount ? entry.creditAccount.label : '-')|length) %}
+        {% endfor %}
         <div class="table-responsive">
-            <table class="table table-bordered table-hover table-sm">
+            <table class="table table-bordered table-hover table-sm fit-rows-table journal-entries-table">
                 <thead>
                 <tr>
                     <th>{{ 'accounting.journal.entry.date'|trans }}</th>
-                    <th>{{ 'accounting.journal.entry.doc_number'|trans }}</th>
+                    <th class="journal-doc-number">{{ 'accounting.journal.entry.doc_number'|trans }}</th>
                     <th class="text-end">{{ 'accounting.journal.entry.amount'|trans }}</th>
-                    <th>{{ 'accounting.journal.entry.debit'|trans }}</th>
-                    <th>{{ 'accounting.journal.entry.credit'|trans }}</th>
+                    <th class="fit-rows-cut" style="--fit-rows-share: {{ (100 * debitChars / (debitChars + creditChars))|round(1) }}%">{{ 'accounting.journal.entry.debit'|trans }}</th>
+                    <th class="fit-rows-cut" style="--fit-rows-share: {{ (100 * creditChars / (debitChars + creditChars))|round(1) }}%">{{ 'accounting.journal.entry.credit'|trans }}</th>
                     <th class="d-none d-md-table-cell">{{ 'accounting.journal.entry.tax_rate'|trans }}</th>
                     <th class="d-none d-md-table-cell">{{ 'accounting.journal.entry.invoice'|trans }}</th>
-                    <th>{{ 'accounting.journal.entry.remark'|trans }}</th>
+                    <th class="journal-text">{{ 'accounting.journal.entry.remark'|trans }}</th>
                     <th></th>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody data-fit-rows-target="rows">
                 {% for entry in entries %}
                     <tr>
-                        <td>{{ entry.date|date('d.m.Y') }}</td>
-                        <td>{{ '%04d'|format(entry.documentNumber) }}</td>
+                        <td>{{ entry.date|date('d.m.') }}<span class="journal-date-year">{{ entry.date|date('Y') }}</span></td>
+                        <td class="journal-doc-number">{{ '%04d'|format(entry.documentNumber) }}</td>
                         <td class="text-end">{{ entry.amount|number_format(2, ',', '.') }}</td>
-                        <td>{{ entry.debitAccount ? entry.debitAccount.label : (entry.counterAccountLegacy ?? '-') }}</td>
-                        <td>{{ entry.creditAccount ? entry.creditAccount.label : '-' }}</td>
+                        <td class="fit-rows-cut">{{ entry.debitAccount ? journal.account(entry.debitAccount) : (entry.counterAccountLegacy ?? '-') }}</td>
+                        <td class="fit-rows-cut">{{ entry.creditAccount ? journal.account(entry.creditAccount) : '-' }}</td>
                         <td class="d-none d-md-table-cell">{{ entry.taxRate ? entry.taxRate.name : '-' }}</td>
                         <td class="d-none d-md-table-cell">{% if entry.missingDocumentNumber %}<span class="badge text-bg-warning" title="{{ 'accounting.journal.entry.missing_document_hint'|trans }}">{{ 'accounting.journal.entry.missing_document'|trans }}</span>{% else %}{{ entry.invoiceNumber ?? '-' }}{% endif %}</td>
-                        <td>{{ entry.remark ?? '' }}</td>
+                        <td class="journal-text">{{ entry.remark ?? '' }}</td>
                         <td>
                             {% if not batch.closed %}
                                 <button type="button" class="btn btn-sm btn-link p-0 border-0"
@@ -300,12 +309,10 @@
         </div>
     {% endif %}
 
-    <div class="d-flex">
-        <ul class="pagination me-auto">
-            <li class="page-item">
-                <a class="page-link" href="{{ path('journal.overview') }}">&larr; {{ 'button.back'|trans }}</a>
-            </li>
-        </ul>
+    {# Centred, so it does not shift as the number of pages changes with the page size;
+       on touch screens clear of the floating add button, see app.css. Back to the
+       overview goes through the navbar. #}
+    <div class="d-flex justify-content-center fit-rows-paging">
         {% include 'paginator.html.twig' with { 'url': path('journal.batch.entries', {'id': batch.id, 'filter': filter}), 'search': search } %}
     </div>
 
@@ -343,3 +350,7 @@
     </div>
 </div>
 {% endblock %}
+
+{# An account as number and name; on touch screens the name is left out to keep the
+   table within the screen width, see app.css #}
+{% macro account(account) %}{{ account.accountNumber }}<span class="journal-account-name"> - {{ account.name }}</span>{% endmacro %}

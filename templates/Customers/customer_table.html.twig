@@ -1,29 +1,43 @@
+{# swipe-nav: a sideways swipe pages, through the arrows of the paginator.
+   fit-rows: as many guests per page as fit the screen, see ListPageSizeService. Inside the
+   part the search replaces, so a new result measures again. On touch screens the names and
+   companies share the width in proportion to their longest text on the page, see app.css. #}
+{% set companies = {} %}
+{% set nameChars = {'firstname': 1, 'lastname': 1, 'company': 1} %}
+{% for customer in customers %}
+    {% set company = customer.customerAddresses|map(address => address.company)|filter(company => company|length > 0)|join(' ') %}
+    {% set companies = companies|merge({('c' ~ customer.id): company}) %}
+    {% set nameChars = {
+        'firstname': max(nameChars.firstname, customer.firstname|length),
+        'lastname': max(nameChars.lastname, customer.lastname|length),
+        'company': max(nameChars.company, company|length)
+    } %}
+{% endfor %}
+{% set nameCharsSum = nameChars.firstname + nameChars.lastname + nameChars.company %}
+<div class="fit-rows" data-controller="fit-rows swipe-nav"
+     data-fit-rows-cookie-value="customers_rows" data-fit-rows-per-page-value="{{ perPage }}"
+     data-fit-rows-page-value="{{ page }}" data-fit-rows-total-value="{{ total }}"
+     data-fit-rows-search-value="{{ search }}">
 <div class="table-responsive">
-<table class="table table-bordered table-hover">
+<table class="table table-bordered table-hover fit-rows-table">
     <thead>
     <tr>
-        <th class="text-muted small text-end">ID</th>
-        <th>{{ 'customer.firstname'|trans }}</th>
-        <th>{{ 'customer.lastname'|trans }}</th>
-        <th>{{ 'customer.company'|trans }}</th>
-        <th>{{ 'customer.count.books'|trans }}</th>
+        <th class="text-muted small text-end fit-rows-phone-hidden">ID</th>
+        <th class="fit-rows-cut" style="--fit-rows-share: {{ (100 * nameChars.firstname / nameCharsSum)|round(1) }}%">{{ 'customer.firstname'|trans }}</th>
+        <th class="fit-rows-cut" style="--fit-rows-share: {{ (100 * nameChars.lastname / nameCharsSum)|round(1) }}%">{{ 'customer.lastname'|trans }}</th>
+        <th class="fit-rows-cut" style="--fit-rows-share: {{ (100 * nameChars.company / nameCharsSum)|round(1) }}%">{{ 'customer.company'|trans }}</th>
+        <th><span class="fit-rows-long">{{ 'customer.count.books'|trans }}</span><span class="fit-rows-short">{{ 'customer.count.books.short'|trans }}</span></th>
         <th>{{ 'customer.action'|trans }}</th>
     </tr>
     </thead>
-    <tbody>
+    <tbody data-fit-rows-target="rows">
     {% for customer in customers %}
         {% if customer.id != 0 %}
             <tr>
-                <td class="text-muted small text-end" width="3%">{{ customer.id }}</td>
-                <td>{{ customer.firstname }}</td>
-                <td>{{ customer.lastname }}</td>
-                <td>
-                    {% for address in customer.customerAddresses %}
-                        {% if address.company|length > 0 %}
-                            {{ address.company }}
-                        {% endif %}
-                    {% endfor %}
-                </td>
+                <td class="text-muted small text-end fit-rows-phone-hidden" width="3%">{{ customer.id }}</td>
+                <td class="fit-rows-cut">{{ customer.firstname }}</td>
+                <td class="fit-rows-cut">{{ customer.lastname }}</td>
+                <td class="fit-rows-cut">{{ companies['c' ~ customer.id] }}</td>
                 <td>{{ customer.bookedReservations|length }}</td>
                 <td>
                     <a href="#" title="{{ 'button.details'|trans }}"><i
@@ -39,7 +53,7 @@
                            data-title="{{ 'customer.details'|trans }}"
                            data-bs-toggle="modal" data-bs-target="#modalCenter"></i></a>
                     <a href="{{ path('customers.gdpr.customer', {'id': customer.id}) }}" title="{{ 'button.gdpr'|trans }}">
-                        <i class="fas fa-balance-scale-left"></i></a>                                                                          
+                        <i class="fas fa-balance-scale-left"></i></a>
                 </td>
             </tr>
         {% endif %}
@@ -48,4 +62,7 @@
 </table>
 </div>
 <input id="page" type="hidden" name="page" value="{{ page }}" data-customers-target="page" />
-{% include 'paginator.html.twig' with { 'url' : path('customers.overview'), 'pagination_action': 'click->customers#paginateAction' } %}
+<div class="d-flex fit-rows-paging">
+    {% include 'paginator.html.twig' with { 'url' : path('customers.overview'), 'pagination_action': 'click->customers#paginateAction', 'pagination_swipe': true } %}
+</div>
+</div>

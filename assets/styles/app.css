@@ -520,6 +520,18 @@ body.reservations-hide-nav #flash-message-container {
     display: none !important;
 }
 
+/* Touch screens: swiping up hides the navbar (hide_nav_controller) */
+
+html.hide-nav-hidden body > nav.navbar {
+    display: none !important;
+}
+
+/* The swipe down that brings the navbar back must not reach the browser's pull-to-refresh */
+html.hide-nav-enabled,
+html.hide-nav-enabled body {
+    overscroll-behavior-y: contain;
+}
+
 body.reservations-week-focus > nav.navbar,
 body.reservations-week-focus #table-filter,
 body.reservations-week-focus #flash-message-container,
@@ -743,6 +755,136 @@ body.reservations-week-pointer .reservations-week-controls > .btn {
 
 .journal-edge-next {
     right: .5rem;
+}
+
+/* On touch screens a swipe pages; the arrows would only cover the table */
+@media not all and (hover: hover) and (pointer: fine) {
+    .journal-edge-nav {
+        display: none;
+    }
+}
+
+/* Short heading of a paged list for touch screens, a mark for phones (see below) */
+.fit-rows-table .fit-rows-short,
+.fit-rows-table .fit-rows-phone-only {
+    display: none;
+}
+
+/* Paged lists that show as many rows as fit the screen (fit_rows_controller.js: booking
+   journal month, invoices, guests), on touch screens: one line per row, so every row has
+   the same height, and the table within the screen width. Columns marked fit-rows-cut share
+   what the others leave, in proportion to their longest text on the page (--fit-rows-share,
+   set by the template), and are cut short (max-width: 0 lets them shrink below their
+   content), down to a width that still shows the start, e.g. an account number. The
+   controller stretches the list to the bottom of the screen; the page numbers sit there,
+   centred and level with the floating add button: as high and as far from the bottom, and
+   clear of it on both sides. A page then needs no empty band below (fab-add-clearance). */
+@media not all and (hover: hover) and (pointer: fine) {
+    .fit-rows-table td {
+        white-space: nowrap;
+    }
+
+    /* A long heading such as "Rechnungsdatum" would widen a column of short values: the
+       short one instead ("Datum") */
+    .fit-rows-table .fit-rows-long {
+        display: none;
+    }
+
+    .fit-rows-table .fit-rows-short {
+        display: inline;
+        white-space: nowrap;
+    }
+
+    .fit-rows-table .fit-rows-cut {
+        max-width: 0;
+        min-width: 3.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .fit-rows-table th.fit-rows-cut {
+        width: var(--fit-rows-share, 100%);
+    }
+
+    .container.fit-rows-fluid {
+        max-width: none;
+    }
+
+    .fit-rows {
+        display: flex;
+        flex-direction: column;
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+
+    .fit-rows-paging {
+        margin-top: auto;
+        min-height: 3.5rem;
+        padding: 0 4.5rem;
+        align-items: center;
+    }
+
+    .fit-rows-paging,
+    .fit-rows-paging > .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .fit-rows-paging > .pagination {
+        margin-bottom: 0;
+    }
+
+    /* Booking journal: the booking text in full up to a limit that leaves the accounts
+       their numbers; the date without its year, the month is the page's */
+    .journal-entries-table .journal-text {
+        max-width: 16rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .journal-date-year {
+        display: none;
+    }
+}
+
+/* Paged lists on a phone (narrow upright, low sideways): what is marked fit-rows-phone-hidden
+   gives way (a column, a year, a status text, a long heading), fit-rows-phone-only shows
+   instead (a status icon, a short heading); all of it shows in the details */
+@media (not ((hover: hover) and (pointer: fine))) and ((max-width: 575.98px) or (max-height: 500px)) {
+    .fit-rows-table .fit-rows-phone-hidden {
+        display: none;
+    }
+
+    .fit-rows-table .fit-rows-phone-only {
+        display: inline;
+        white-space: nowrap;
+    }
+
+    .fit-rows-table .fit-rows-cut {
+        min-width: 3rem;
+    }
+}
+
+/* Booking journal on a phone (narrow upright, low sideways): accounts as number only and no
+   document number; the booking text takes the rest and is cut short. All of it shows when
+   editing an entry. */
+@media (not ((hover: hover) and (pointer: fine))) and ((max-width: 575.98px) or (max-height: 500px)) {
+    .journal-account-name,
+    .journal-entries-table .journal-doc-number {
+        display: none;
+    }
+
+    /* An old free-text counter account has no number to fall back to */
+    .journal-entries-table .fit-rows-cut,
+    .journal-entries-table th.fit-rows-cut {
+        max-width: 8rem;
+        min-width: 0;
+        width: auto;
+    }
+
+    .journal-entries-table .journal-text {
+        max-width: 0;
+        width: 100%;
+    }
 }
 
 /* Right border on the last cell of each row */

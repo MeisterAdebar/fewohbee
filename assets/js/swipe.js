@@ -38,3 +38,13 @@ export function horizontalSwipeDirection(dx, dy) {
     }
     return null;
 }
+
+/**
+ * Whether a touch on target may act as a page gesture: not in a form field,
+ * dialog, side panel or menu, and not while a dialog or side panel is open.
+ */
+export function isPageSwipeTarget(target) {
+    return target instanceof Element
+        && !target.closest('input, textarea, select, [contenteditable], .modal, .offcanvas, .dropdown-menu, .popover')
+        && !document.querySelector('.modal.show, .offcanvas.show, .offcanvas.showing');
+}

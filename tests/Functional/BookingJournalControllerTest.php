@@ -16,6 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\BrowserKit\Cookie;
 use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 
 final class BookingJournalControllerTest extends WebTestCase
@@ -419,6 +420,49 @@ final class BookingJournalControllerTest extends WebTestCase
         $previous = (string) $crawler->filter('.journal-edge-prev')->attr('href');
         self::assertStringContainsString('/journal/batch/'.$mayId, $previous);
         self::assertStringContainsString('page=2', $previous);
+    }
+
+    public function testPageSizeFollowsTheRowsThatFitTheScreen(): void
+    {
+        $client = static::createClient();
+        $client->loginUser($this->createCashJournalUser());
+
+        $em = $this->getEntityManager();
+        $em->createQuery('DELETE FROM App\Entity\BookingEntry e WHERE e.bookingBatch IN (SELECT b.id FROM App\Entity\BookingBatch b WHERE b.year = 2095)')->execute();
+        $em->createQuery('DELETE FROM App\Entity\BookingBatch b WHERE b.year = 2095')->execute();
+
+        $batch = $this->createEntryIn(2095, 3)->getBookingBatch();
+        for ($i = 2; $i <= 25; ++$i) {
+            $entry = new BookingEntry();
+            $entry->setBookingBatch($batch);
+            $entry->setDate(new \DateTime('2095-03-10'));
+            $entry->setDocumentNumber($i);
+            $entry->setAmount('1.00');
+            $em->persist($entry);
+        }
+        $em->flush();
+        $url = '/journal/batch/'.$batch->getId();
+        $rowsOn = static fn (\Symfony\Component\DomCrawler\Crawler $crawler): int => $crawler->filter('tbody[data-fit-rows-target] tr')->count();
+
+        // 10 rows fit: 25 entries make three pages, the last with 5
+        $client->getCookieJar()->set(new Cookie('journal_rows', '10'));
+        $crawler = $client->request('GET', $url);
+        self::assertSame(10, $rowsOn($crawler));
+        self::assertSame('10', $crawler->filter('[data-fit-rows-per-page-value]')->attr('data-fit-rows-per-page-value'));
+        self::assertSame('25', $crawler->filter('[data-fit-rows-total-value]')->attr('data-fit-rows-total-value'));
+        $crawler = $client->request('GET', $url.'?page=3');
+        self::assertSame(5, $rowsOn($crawler));
+
+        // A page number beyond the end, e.g. from a smaller screen, shows the last page
+        $crawler = $client->request('GET', $url.'?page=9');
+        self::assertSame(5, $rowsOn($crawler));
+        self::assertSame('3', $crawler->filter('[data-fit-rows-page-value]')->attr('data-fit-rows-page-value'));
+
+        // The cookie comes from the client: bounded, and ignored when not a number
+        $client->getCookieJar()->set(new Cookie('journal_rows', '1'));
+        self::assertSame(5, $rowsOn($client->request('GET', $url)));
+        $client->getCookieJar()->set(new Cookie('journal_rows', 'abc'));
+        self::assertSame(25, $rowsOn($client->request('GET', $url)));
     }
 
     public function testYearViewIsForbiddenWithoutRole(): void

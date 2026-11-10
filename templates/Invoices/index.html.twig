@@ -9,38 +9,43 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container" data-controller="invoices">
-        <div class="row justify-content-between">
-            <div class="col-md-4">
-                <button type="button" class="btn btn-secondary" data-action="click->invoices#openModalAction"
-                        data-url="{{ path('invoices.new.invoice') }}" data-create-new="true"
-                        data-title="{{ 'invoice.select.open.reservation'|trans }}"
-                        data-bs-toggle="modal" data-bs-target="#modalCenter">
-                    <i class="fas fa-plus"></i> {{ 'nav.invoice.add'|trans }}</button>
-            </div>
-            <div class="col-md-3 text-end">
-                <a href="#" class="fs-5 text-secondary" title="{{ 'invoice.settings.text'|trans }}" 
-                data-url="{{ path('invoices.settings.get') }}" data-bs-toggle="modal" data-bs-target="#modalCenter"
-                data-action="click->invoices#openModalAction">
-                    <i class="fas fa-cog"></i>
-                </a>             
-            </div>
-        </div>
+    <div class="container fit-rows-fluid" data-controller="invoices">
         <form class="form" id="invoices-search-form" data-search-url="{{ path('invoices.search') }}" data-action="submit->invoices#doSearchAction" novalidate>
             <div class="row">
-                <div class="col-md-5">
+                <div class="col col-md-6">
                     <input type="search" class="form-control" id="search" name="search"
                            placeholder="{{ 'nav.customer.search'|trans }}" value="{{ search }}"
                            data-action="keyup->invoices#searchInputAction"/>
                 </div>
-                <div class="col-md ps-0">
+                <div class="col-auto col-md ps-0">
                     <button class="btn btn-secondary" type="button" data-action="click->invoices#doSearchAction">
                         <i class="fas fa-search"></i> {{ 'nav.customer.search'|trans }}
                     </button>
-                </div>                
+                </div>
+                {# Add and settings in the search line, as on the guest page; on touch screens
+                   the add button floats and the settings stay beside the search #}
+                <div class="col-auto col-md d-flex align-items-center justify-content-end gap-3">
+                    <button type="button" class="btn btn-secondary fab-add-inline" data-action="click->invoices#openModalAction"
+                            data-url="{{ path('invoices.new.invoice') }}" data-create-new="true"
+                            data-title="{{ 'invoice.select.open.reservation'|trans }}"
+                            data-bs-toggle="modal" data-bs-target="#modalCenter">
+                        <i class="fas fa-plus"></i> {{ 'nav.invoice.add'|trans }}</button>
+                    {# Touch screens: the same as a floating button, see "Add button on touch screens" in app.css #}
+                    <button type="button" class="btn fab-add" data-action="click->invoices#openModalAction"
+                            data-url="{{ path('invoices.new.invoice') }}" data-create-new="true"
+                            data-title="{{ 'invoice.select.open.reservation'|trans }}"
+                            data-bs-toggle="modal" data-bs-target="#modalCenter"
+                            title="{{ 'nav.invoice.add'|trans }}" aria-label="{{ 'nav.invoice.add'|trans }}">
+                        <i class="fas fa-plus"></i></button>
+                    <a href="#" class="fs-5 text-secondary" title="{{ 'invoice.settings.text'|trans }}"
+                       data-url="{{ path('invoices.settings.get') }}" data-bs-toggle="modal" data-bs-target="#modalCenter"
+                       data-action="click->invoices#openModalAction">
+                        <i class="fas fa-cog"></i>
+                    </a>
+                </div>
             </div>
         </form>
-        <div class="row mt-4">
+        <div class="row mt-3">
             <div id="invoice-table" class="col">
                 {% include 'Invoices/invoice_table.html.twig' %}
             </div>

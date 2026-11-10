@@ -48,6 +48,7 @@ invoice.miscellaneous.position.amount.flat_help: 'Flat rate: 1x per booking'
 invoice.netto: Net
 invoice.number: Invoice number
 invoice.number.short: Inv. no.
+invoice.number.column_short: 'No.'
 invoice.einvoice: E-Invoice
 invoice.open.reservations.filter.customer: Browse reservations for customers
 invoice.open.reservations.filter.time: Search reservations in period
@@ -67,6 +68,7 @@ invoice.select.customer.search.input.placeholder: Customer Last Name
 invoice.select.open.reservation: Select reservation without invoice
 invoice.startdate: From
 invoice.status: Status
+invoice.status.column_short: 'St.'
 invoice.status.canceled: canceled
 invoice.status.unpaid: Open
 invoice.status.paid: Paid

@@ -20,6 +20,7 @@ use App\Entity\Template;
 use App\Repository\ReservationRepository;
 use App\Service\CSRFProtectionService;
 use App\Service\CustomerService;
+use App\Service\ListPageSizeService;
 use App\Service\TemplatesService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -44,16 +45,23 @@ class CustomerServiceController extends AbstractController
      * @return Response
      */
     #[Route('/', name: 'customers.overview', methods: ['GET'])]
-    public function indexAction(ManagerRegistry $doctrine, Request $request)
+    public function indexAction(ManagerRegistry $doctrine, Request $request, ListPageSizeService $pageSize)
     {
         $em = $doctrine->getManager();
 
         $search = $request->query->get('search', '');
-        $page = $request->query->get('page', 1);
-        $customers = $em->getRepository(Customer::class)->findByFilter($search, $page, $this->perPage);
+        $page = (int) $request->query->get('page', 1);
+        // As many rows as fit the screen, see ListPageSizeService
+        $perPage = $pageSize->perPage($request, 'customers', $this->perPage);
+        $customers = $em->getRepository(Customer::class)->findByFilter($search, $page, $perPage);
+        $clampedPage = $pageSize->clampPage($page, $customers->count(), $perPage);
+        if ($clampedPage !== $page) {
+            $page = $clampedPage;
+            $customers = $em->getRepository(Customer::class)->findByFilter($search, $page, $perPage);
+        }
 
         // calculate the number of pages for pagination
-        $pages = ceil($customers->count() / $this->perPage);
+        $pages = ceil($customers->count() / $perPage);
 
         //        $customers2 = $em->getRepository(Customer::class)->findAll();
         //        /* @var $customer \Pensionsverwaltung\Database\Entity\Customer */
@@ -83,6 +91,8 @@ class CustomerServiceController extends AbstractController
             'customers' => $customers,
             'page' => $page,
             'pages' => $pages,
+            'perPage' => $perPage,
+            'total' => $customers->count(),
             'search' => $search,
         ]);
     }
@@ -91,20 +101,29 @@ class CustomerServiceController extends AbstractController
      * @return Response
      */
     #[Route('/search', name: 'customers.search', methods: ['POST'])]
-    public function searchCustomersAction(ManagerRegistry $doctrine, Request $request)
+    public function searchCustomersAction(ManagerRegistry $doctrine, Request $request, ListPageSizeService $pageSize)
     {
         $em = $doctrine->getManager();
         $search = $request->request->get('search', '');
-        $page = $request->request->get('page', 1);
-        $customers = $em->getRepository(Customer::class)->findByFilter($search, $page, $this->perPage);
+        $page = (int) $request->request->get('page', 1);
+        // As many rows as fit the screen, see ListPageSizeService
+        $perPage = $pageSize->perPage($request, 'customers', $this->perPage);
+        $customers = $em->getRepository(Customer::class)->findByFilter($search, $page, $perPage);
+        $clampedPage = $pageSize->clampPage($page, $customers->count(), $perPage);
+        if ($clampedPage !== $page) {
+            $page = $clampedPage;
+            $customers = $em->getRepository(Customer::class)->findByFilter($search, $page, $perPage);
+        }
 
         // calculate the number of pages for pagination
-        $pages = ceil($customers->count() / $this->perPage);
+        $pages = ceil($customers->count() / $perPage);
 
         return $this->render('Customers/customer_table.html.twig', [
             'customers' => $customers,
             'page' => $page,
             'pages' => $pages,
+            'perPage' => $perPage,
+            'total' => $customers->count(),
             'search' => $search,
         ]);
     }

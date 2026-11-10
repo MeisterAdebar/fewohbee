@@ -17,6 +17,7 @@ customer.company: Firma
 customer.contact: Kontakt
 customer.contactdata: Kontaktdaten
 customer.count.books: 'Anzahl Buchungen'
+customer.count.books.short: Buchungen
 customer.country: Land
 customer.delete.ask: 'Diesen Gast wirklich löschen? Hinweis: Alle bisherigen Buchungen wurden dann von einem "gelöschten" Gast getätigt.'
 customer.details: Gastdetails

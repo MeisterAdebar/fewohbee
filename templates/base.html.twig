@@ -26,7 +26,9 @@
         {% set activeRouteName = getActiveRouteName() %}
         {% set showReservations = is_granted('ROLE_RESERVATIONS') %}
         {% set showReservationsRO = is_granted('ROLE_RESERVATIONS_RO') %}
-        <nav class="navbar navbar-expand-xl bg-primary">
+        {# On touch screens a swipe up hides the navbar, a swipe down brings it back (hide-nav).
+           Pages with their own vertical gestures override the block with nothing. #}
+        <nav class="navbar navbar-expand-xl bg-primary"{% block navbarController %} data-controller="hide-nav"{% endblock %}>
             <div class="container-fluid">
                 {% if showReservations or showReservationsRO %}
                 <a class="navbar-brand" href="{{ path('start') }}">{{ 'nav.reservation.overview'|trans }}</a>

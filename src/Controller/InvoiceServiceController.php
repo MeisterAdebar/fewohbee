@@ -37,6 +37,7 @@ use App\Service\EInvoice\EInvoiceReadinessService;
 use App\Service\EInvoice\Validation\EInvoiceValidationException;
 use App\Service\InvoiceNumberGenerator;
 use App\Service\InvoiceService;
+use App\Service\ListPageSizeService;
 use App\Service\PriceService;
 use App\Service\ReservationService;
 use App\Service\TemplatesService;
@@ -64,18 +65,24 @@ class InvoiceServiceController extends AbstractController
      * @return Response
      */
     #[Route('/', name: 'invoices.overview', methods: ['GET'])]
-    public function indexAction(ManagerRegistry $doctrine, RequestStack $requestStack, TemplatesService $ts, EInvoiceReadinessService $readinessService, Request $request)
+    public function indexAction(ManagerRegistry $doctrine, RequestStack $requestStack, TemplatesService $ts, EInvoiceReadinessService $readinessService, Request $request, ListPageSizeService $pageSize)
     {
         $em = $doctrine->getManager();
 
         $templateId = $ts->getTemplateId($doctrine, $requestStack, 'TEMPLATE_INVOICE_PDF', 'invoice-template-id');
         $search = $request->query->get('search', '');
-        $page = $request->query->get('page', 1);
-
-        $invoices = $em->getRepository(Invoice::class)->findByFilter($search, $page, $this->perPage);
+        $page = (int) $request->query->get('page', 1);
+        // As many rows as fit the screen, see ListPageSizeService
+        $perPage = $pageSize->perPage($request, 'invoices', $this->perPage);
+        $invoices = $em->getRepository(Invoice::class)->findByFilter($search, $page, $perPage);
+        $clampedPage = $pageSize->clampPage($page, $invoices->count(), $perPage);
+        if ($clampedPage !== $page) {
+            $page = $clampedPage;
+            $invoices = $em->getRepository(Invoice::class)->findByFilter($search, $page, $perPage);
+        }
 
         // calculate the number of pages for pagination
-        $pages = ceil($invoices->count() / $this->perPage);
+        $pages = ceil($invoices->count() / $perPage);
 
         return $this->render(
             'Invoices/index.html.twig',
@@ -84,6 +91,8 @@ class InvoiceServiceController extends AbstractController
                 'templateId' => $templateId,
                 'page' => $page,
                 'pages' => $pages,
+                'perPage' => $perPage,
+                'total' => $invoices->count(),
                 'search' => $search,
                 'einvoiceReadiness' => $readinessService->checkAll($invoices),
                 'activeProfileKey' => $readinessService->getActiveProfileKey(),
@@ -95,15 +104,22 @@ class InvoiceServiceController extends AbstractController
      * @return Response
      */
     #[Route('/search', name: 'invoices.search', methods: ['POST'])]
-    public function searchInvoicesAction(ManagerRegistry $doctrine, RequestStack $requestStack, TemplatesService $ts, EInvoiceReadinessService $readinessService, Request $request)
+    public function searchInvoicesAction(ManagerRegistry $doctrine, RequestStack $requestStack, TemplatesService $ts, EInvoiceReadinessService $readinessService, Request $request, ListPageSizeService $pageSize)
     {
         $em = $doctrine->getManager();
         $search = $request->request->get('search', '');
-        $page = $request->request->get('page', 1);
-        $invoices = $em->getRepository(Invoice::class)->findByFilter($search, $page, $this->perPage);
+        $page = (int) $request->request->get('page', 1);
+        // As many rows as fit the screen, see ListPageSizeService
+        $perPage = $pageSize->perPage($request, 'invoices', $this->perPage);
+        $invoices = $em->getRepository(Invoice::class)->findByFilter($search, $page, $perPage);
+        $clampedPage = $pageSize->clampPage($page, $invoices->count(), $perPage);
+        if ($clampedPage !== $page) {
+            $page = $clampedPage;
+            $invoices = $em->getRepository(Invoice::class)->findByFilter($search, $page, $perPage);
+        }
 
         // calculate the number of pages for pagination
-        $pages = ceil($invoices->count() / $this->perPage);
+        $pages = ceil($invoices->count() / $perPage);
 
         $templateId = $ts->getTemplateId($doctrine, $requestStack, 'TEMPLATE_INVOICE_PDF', 'invoice-template-id');
 
@@ -113,6 +129,8 @@ class InvoiceServiceController extends AbstractController
             'invoices' => $invoices,
             'page' => $page,
             'pages' => $pages,
+            'perPage' => $perPage,
+            'total' => $invoices->count(),
             'search' => $search,
             'templateId' => $templateId,
             'einvoiceReadiness' => $readinessService->checkAll($invoices),

@@ -48,6 +48,7 @@ invoice.miscellaneous.position.amount.flat_help: 'Pauschalpreis: 1x pro Buchung'
 invoice.netto: Netto
 invoice.number: Rechnungsnr.
 invoice.number.short: Rechnung
+invoice.number.column_short: 'Re.-Nr.'
 invoice.einvoice: E-Rechnung
 invoice.open.reservations.filter.customer: 'Reservierungen nach Kunden durchsuchen'
 invoice.open.reservations.filter.time: 'Reservierungen in Zeitraum durchsuchen'
@@ -67,6 +68,7 @@ invoice.select.customer.search.input.placeholder: 'Nachname Kunde'
 invoice.select.open.reservation: 'Reservierung ohne Rechnung auswählen'
 invoice.startdate: Von
 invoice.status: Status
+invoice.status.column_short: 'St.'
 invoice.status.canceled: storniert
 invoice.status.unpaid: offen
 invoice.status.paid: bezahlt

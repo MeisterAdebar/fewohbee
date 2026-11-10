@@ -19,6 +19,7 @@ use App\Service\BookingJournal\AccountingSettingsService;
 use App\Service\BookingJournal\BookingJournalService;
 use App\Service\BookingJournal\OpeningBalanceService;
 use App\Service\JournalExport\DatevExportService;
+use App\Service\ListPageSizeService;
 use App\Service\Mcp\McpSettings;
 use App\Service\TemplatesService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -142,6 +143,7 @@ class BookingJournalController extends AbstractController
         BookingEntryRepository $entryRepo,
         BookingJournalService $journalService,
         EntityManagerInterface $em,
+        ListPageSizeService $pageSize,
         Request $request,
     ): Response {
         $page = (int) $request->query->get('page', 1);
@@ -151,8 +153,14 @@ class BookingJournalController extends AbstractController
             $filter = 'all';
         }
 
-        $entries = $entryRepo->findByBatch($batch, $search, $page, self::PER_PAGE, $filter);
-        $pages = ceil($entries->count() / self::PER_PAGE);
+        // As many entries as fit the screen, see ListPageSizeService
+        $perPage = $pageSize->perPage($request, 'journal', self::PER_PAGE);
+        $entries = $entryRepo->findByBatch($batch, $search, $page, $perPage, $filter);
+        $pages = (int) ceil($entries->count() / $perPage);
+        if ($pages > 0 && $page > $pages) {
+            $page = $pageSize->clampPage($page, $entries->count(), $perPage);
+            $entries = $entryRepo->findByBatch($batch, $search, $page, $perPage, $filter);
+        }
 
         $pdfTemplates = $em->getRepository(Template::class)->loadByTypeName(['TEMPLATE_CASHJOURNAL_PDF']);
 
@@ -174,7 +182,7 @@ class BookingJournalController extends AbstractController
         // previous month, so the entries read on without a gap
         $previousBatchLastPage = null === $previousBatch
             ? 1
-            : max(1, (int) ceil($entryRepo->findByBatch($previousBatch, '', 1, self::PER_PAGE, $filter)->count() / self::PER_PAGE));
+            : max(1, (int) ceil($entryRepo->findByBatch($previousBatch, '', 1, $perPage, $filter)->count() / $perPage));
 
         return $this->render('BookingJournal/entries.html.twig', [
             'batch' => $batch,
@@ -186,6 +194,8 @@ class BookingJournalController extends AbstractController
             'bankClosingBalance' => $bankClosingBalance,
             'page' => $page,
             'pages' => $pages,
+            'perPage' => $perPage,
+            'total' => $entries->count(),
             'search' => $search,
             'filter' => $filter,
             'pdfTemplates' => $pdfTemplates,

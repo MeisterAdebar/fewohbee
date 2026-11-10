@@ -1,5 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
-import { onSwipe, horizontalSwipeDirection } from '../js/swipe.js';
+import { onSwipe, horizontalSwipeDirection, isPageSwipeTarget } from '../js/swipe.js';
 
 /**
  * Paging arrows at the screen edges, and on touch screens the same paging by
@@ -69,9 +69,7 @@ export default class extends Controller {
      * that belong to something else.
      */
     startState(target) {
-        if (!(target instanceof Element)
-            || target.closest('input, textarea, select, [contenteditable], .modal, .offcanvas, .dropdown-menu, .popover')
-            || document.querySelector('.modal.show, .offcanvas.show, .offcanvas.showing')) {
+        if (!isPageSwipeTarget(target)) {
             return null;
         }
         for (let el = target; el && el !== document.body; el = el.parentElement) {

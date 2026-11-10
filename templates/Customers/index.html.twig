@@ -9,11 +9,11 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container"
+    <div class="container fit-rows-fluid"
          data-controller="customers"
          data-customers-search-url-value="{{ path('customers.search') }}">
         <div class="row">
-            <div class="col-md-6">
+            <div class="col col-md-6">
                 <form class="form" id="customers-search-form"
                       data-customers-target="searchForm"
                       data-action="submit->customers#searchAction">
@@ -23,14 +23,14 @@
                            placeholder="{{ 'nav.customer.search'|trans }}" value="{{ search }}"/>
                 </form>
             </div>
-            <div class="col-md ps-0">
+            <div class="col-auto col-md ps-0">
                 <button class="btn btn-secondary" type="button"
                         data-action="click->customers#searchAction">
                     <i class="fas fa-search"></i> {{ 'nav.customer.search'|trans }}
                 </button>
             </div>
-            <div class="col-md text-end">
-                <div class="btn-group">
+            <div class="col-12 col-md text-end">
+                <div class="btn-group fab-add-inline">
                     <button type="button" class="btn btn-secondary" 
                             data-action="click->customers#openModalAction"
                             data-url="{{ path('customers.new.customer') }}"
@@ -39,6 +39,15 @@
                             data-bs-target="#modalCenter">
                         <i class="fas fa-plus"></i> {{ 'nav.customer.add'|trans }}</button>
                 </div>
+                {# Touch screens: the same as a floating button, see "Add button on touch screens" in app.css #}
+                <button type="button" class="btn fab-add"
+                        data-action="click->customers#openModalAction"
+                        data-url="{{ path('customers.new.customer') }}"
+                        data-title="{{ 'nav.customer.add'|trans }}"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalCenter"
+                        title="{{ 'nav.customer.add'|trans }}" aria-label="{{ 'nav.customer.add'|trans }}">
+                    <i class="fas fa-plus"></i></button>
             </div>
         </div>
 

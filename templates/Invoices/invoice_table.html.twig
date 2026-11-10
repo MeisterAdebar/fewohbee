@@ -1,32 +1,42 @@
+{# swipe-nav: a sideways swipe pages, through the arrows of the paginator.
+   fit-rows: as many invoices per page as fit the screen, see ListPageSizeService. Inside the
+   part the search replaces, so a new result measures again. On touch screens name and
+   company share the width in proportion to their longest text on the page, see app.css. #}
+{% set lastnameChars = max([1]|merge(invoices|map(invoice => invoice.lastname|length))) %}
+{% set companyChars = max([1]|merge(invoices|map(invoice => invoice.company|length))) %}
+<div class="fit-rows" data-controller="fit-rows swipe-nav"
+     data-fit-rows-cookie-value="invoices_rows" data-fit-rows-per-page-value="{{ perPage }}"
+     data-fit-rows-page-value="{{ page }}" data-fit-rows-total-value="{{ total }}"
+     data-fit-rows-search-value="{{ search }}">
 <div class="table-responsive">
-<table class="table table-bordered table-hover">
+<table class="table table-bordered table-hover fit-rows-table">
     <thead>
     <tr>
-        <th>{{ 'invoice.number'|trans }}</th>
-        <th>{{ 'invoice.date'|trans }}</th>
-        <th>{{ 'invoice.lastname'|trans }}</th>
-        <th>{{ 'invoice.company'|trans }}</th>
-        <th>{{ 'invoice.status'|trans }}</th>
+        <th><span class="fit-rows-phone-hidden">{{ 'invoice.number'|trans }}</span><span class="fit-rows-phone-only">{{ 'invoice.number.column_short'|trans }}</span></th>
+        <th><span class="fit-rows-long">{{ 'invoice.date'|trans }}</span><span class="fit-rows-short">{{ 'invoice.date2'|trans }}</span></th>
+        <th class="fit-rows-cut" style="--fit-rows-share: {{ (100 * lastnameChars / (lastnameChars + companyChars))|round(1) }}%">{{ 'invoice.lastname'|trans }}</th>
+        <th class="fit-rows-cut" style="--fit-rows-share: {{ (100 * companyChars / (lastnameChars + companyChars))|round(1) }}%">{{ 'invoice.company'|trans }}</th>
+        <th><span class="fit-rows-phone-hidden">{{ 'invoice.status'|trans }}</span><span class="fit-rows-phone-only" title="{{ 'invoice.status'|trans }}">{{ 'invoice.status.column_short'|trans }}</span></th>
         <th>{{ 'invoice.action'|trans }}</th>
     </tr>
     </thead>
-    <tbody>
+    <tbody data-fit-rows-target="rows">
     {% for invoice in invoices %}
         <tr>
             <td>{{ invoice.number }}</td>
-            <td>{{ invoice.date|date('d.m.Y') }}</td>
-            <td>{{ invoice.lastname }}</td>
-            <td>{{ invoice.company }}</td>
+            <td>{{ invoice.date|date('d.m.') }}<span class="fit-rows-phone-hidden">{{ invoice.date|date('Y') }}</span></td>
+            <td class="fit-rows-cut">{{ invoice.lastname }}</td>
+            <td class="fit-rows-cut">{{ invoice.company }}</td>
             <td>
-                {% if invoice.status == 1 %}
-                    {{ 'invoice.status.unpaid'|trans }}
-                {% elseif invoice.status == 2 %}
-                    {{ 'invoice.status.paid'|trans }}
-                {% elseif invoice.status == 3 %}
-                    {{ 'invoice.status.prepaid'|trans }}
-                {% else %}
-                    {{ 'invoice.status.canceled'|trans }}
-                {% endif %}
+                {# On a phone the status shows as an icon only, see app.css #}
+                {% set status = {
+                    1: ['invoice.status.unpaid', 'fa-hourglass-half text-warning'],
+                    2: ['invoice.status.paid', 'fa-circle-check text-success'],
+                    3: ['invoice.status.prepaid', 'fa-circle-check text-info']
+                }[invoice.status]|default(['invoice.status.canceled', 'fa-ban text-body-secondary']) %}
+                <span class="fit-rows-phone-hidden">{{ status[0]|trans }}</span>
+                <span class="fit-rows-phone-only" title="{{ status[0]|trans }}" aria-label="{{ status[0]|trans }}">
+                    <i class="fa-solid {{ status[1] }}" aria-hidden="true"></i></span>
                 {% if invoice.paymentMeans %}
                     {% set paymentMeansIcon = {
                         'CASH': 'fa-coins',
@@ -35,7 +45,7 @@
                         'SEPA_CREDIT_TRANSFER': 'fa-building-columns',
                         'SEPA_DIRECT_DEBIT': 'fa-money-check'
                     }[invoice.paymentMeans.name]|default('fa-circle-question') %}
-                    <span class="ms-1 text-secondary"
+                    <span class="ms-1 text-secondary fit-rows-phone-hidden"
                        title="{{ invoice.paymentMeans.name|trans }}"
                        aria-label="{{ invoice.paymentMeans.name|trans }}">
                         <i class="fa-solid {{ paymentMeansIcon }}" aria-hidden="true"></i>
@@ -86,4 +96,7 @@
 </table>
 </div>
 <input id="page" type="hidden" name="page" value="{{ page }}" />
-{% include 'paginator.html.twig' with { 'url' : path('invoices.overview') } %}
+<div class="d-flex fit-rows-paging">
+    {% include 'paginator.html.twig' with { 'url' : path('invoices.overview'), 'pagination_swipe': true } %}
+</div>
+</div>

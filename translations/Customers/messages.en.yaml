@@ -17,6 +17,7 @@ customer.company: Company
 customer.contact: Contact
 customer.contactdata: Contact Data
 customer.count.books: Number of Bookings
+customer.count.books.short: Bookings
 customer.country: Country
 customer.delete.ask: >-
   Confirm delete this guest? Note: All previous bookings were then made by a
