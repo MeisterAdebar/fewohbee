@@ -18,7 +18,6 @@ use App\Entity\CustomerAddresses;
 use App\Entity\Enum\IDCardType;
 use App\Entity\Reservation;
 use App\Entity\Template;
-use App\GeoEntity\PostalCodeData;
 use App\Repository\GuestCheckInRepository;
 use App\Repository\PostalCodeDataRepository;
 use App\Service\Localization\GuestLocaleService;
@@ -37,7 +36,7 @@ class CustomerService
     ) {
     }
 
-    public function getCustomerFromForm(Request $request, $id = 'new')
+    public function getCustomerFromForm(Request $request, int|string $id = 'new'): Customer
     {
         $customer = null;
 
@@ -56,7 +55,7 @@ class CustomerService
             $customer->setBirthday(null);
         }
 
-        $addressTypes = $request->request->all('addresstype-'.$id) ?? [];
+        $addressTypes = $request->request->all('addresstype-'.$id);
         $addressCount = count($addressTypes);
         $newAddresses = [];
         for ($i = 0; $i < $addressCount; ++$i) {
@@ -81,6 +80,7 @@ class CustomerService
             $address->setFax($request->request->all('fax-'.$id)[$i]);
             $address->setMobilePhone($request->request->all('mobilephone-'.$id)[$i]);
             $address->setEmail($request->request->all('email-'.$id)[$i]);
+            $address->setInvoiceEmail($request->request->all('invoiceemail-'.$id)[$i] ?? null);
             $address->setBuyerVatId($request->request->all('buyervatid-'.$id)[$i] ?? null);
             $address->setBuyerReference($request->request->all('buyerreference-'.$id)[$i] ?? null);
             $address->setCustomerIBAN($request->request->all('customeriban-'.$id)[$i] ?? null);
@@ -126,9 +126,8 @@ class CustomerService
         return $customer;
     }
 
-    public function deleteCustomer($id)
+    public function deleteCustomer(int|string $id): bool
     {
-        /* @var $customer Customer */
         $customer = $this->em->getRepository(Customer::class)->find($id);
 
         $reservations = $customer->getReservations();
@@ -191,18 +190,14 @@ class CustomerService
     }
 
     /**
-     * Returns the city connected to the given plz.
+     * Returns city suggestions matching a country and postal-code prefix.
      *
-     * @param string $country
-     * @param string $zip
-     *
-     * @return array
+     * @return list<array{postalCode: string|null, placeName: string|null, search: string}>
      */
-    public function getCitiesByZIP($country, $zip)
+    public function getCitiesByZIP(string $country, string $zip): array
     {
         $cities = $this->postalCodeDataRepository->findPlacesByCode($country, $zip);
         $result = [];
-        /* @var $city PostalCodeData */
         foreach ($cities as $city) {
             $result[] = [
                 'postalCode' => $city->getPostalCode(),
@@ -216,6 +211,8 @@ class CustomerService
 
     /**
      * Build all customer variables required by template rendering.
+     *
+     * @return array{customer: mixed}
      */
     public function buildTemplateRenderParams(Template $template, mixed $param): array
     {

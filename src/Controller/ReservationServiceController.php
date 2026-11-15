@@ -48,13 +48,17 @@ use App\Service\PriceService;
 use App\Service\Pricing\PricePromiseService;
 use App\Service\ReservationObject;
 use App\Service\ReservationPeriodService;
+use App\Service\Reservation\ReservationConfirmationService;
+use App\Service\Reservation\ReservationMailRecipientResolver;
 use App\Service\ReservationService;
 use App\Service\ReservationTableDecorationService;
 use App\Service\ReservationTableService;
 use App\Service\TemplatesService;
 use App\Service\TouristTaxService;
+use App\Workflow\WorkflowSkippedException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ManagerRegistry;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\FormError;
@@ -66,6 +70,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\Intl\Countries;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
@@ -355,6 +360,10 @@ class ReservationServiceController extends AbstractController
     public function showSelectAppartmentsFormAction(ManagerRegistry $doctrine, RequestStack $requestStack, ReservationService $rs, Request $request)
     {
         $em = $doctrine->getManager();
+        if (0 === $em->getRepository(ReservationOrigin::class)->count([])) {
+            return $this->render('Reservations/reservation_form_missing_origin.html.twig');
+        }
+
         $objects = $em->getRepository(Subsidiary::class)->findAll();
         $reservationStatus = $em->getRepository(ReservationStatus::class)->findAll();
 
@@ -419,6 +428,7 @@ class ReservationServiceController extends AbstractController
 
         return $this->render('Reservations/reservation_form_show_available_appartments.html.twig', [
             'appartments' => $apartments,
+            'period' => $period,
             'reservationStatus' => $reservationStatus,
             'guestCategories' => $guestCategories,
         ]);
@@ -439,12 +449,15 @@ class ReservationServiceController extends AbstractController
             $request->request->getString('from'),
             $request->request->getString('end'),
         );
+        // A booking keeps its kind of room, so only rooms of the same kind are offered.
+        $edited = $em->getRepository(Reservation::class)->find($request->request->getInt('reservation-id'));
 
         $apartments = $rs->getAvailableApartments(
             $period->start,
             $period->end,
             null,
             $request->request->getString('object', 'all'),
+            $edited instanceof Reservation ? $edited->isEventSpace() : null,
         );
         $reservationStatus = $em->getRepository(ReservationStatus::class)->findAll();
         $guestCategories = $em->getRepository(GuestCategory::class)->findActiveOrdered();
@@ -459,6 +472,7 @@ class ReservationServiceController extends AbstractController
 
         return $this->render('Reservations/reservation_form_edit_show_available_appartments.html.twig', [
             'appartments' => $apartments,
+            'period' => $period,
             'reservationStatus' => $reservationStatus,
             'guestCategories' => $guestCategories,
             'reservation' => $reservation,
@@ -471,6 +485,7 @@ class ReservationServiceController extends AbstractController
     #[Route('/appartments/add/to/reservation', name: 'reservations.add.appartment.to.reservation', methods: ['POST'])]
     #[IsGranted('ROLE_RESERVATIONS')]
     public function addAppartmentToReservationAction(
+        ManagerRegistry $doctrine,
         HttpKernelInterface $kernel,
         RequestStack $requestStack,
         ReservationPeriodService $periodService,
@@ -479,9 +494,12 @@ class ReservationServiceController extends AbstractController
         $newReservationsInformationArray = $requestStack->getSession()->get('reservationInCreation');
 
         if (null != $request->request->get('appartmentid')) {
-            $period = $periodService->parse(
-                $request->request->getString('from'),
-                $request->request->getString('end'),
+            $period = $periodService->forRoom(
+                $periodService->parse(
+                    $request->request->getString('from'),
+                    $request->request->getString('end'),
+                ),
+                $doctrine->getManager()->getRepository(Appartment::class)->find($request->request->getInt('appartmentid')),
             );
             $reservationObject = new ReservationObject(
                 $request->request->get('appartmentid'),
@@ -558,7 +576,7 @@ class ReservationServiceController extends AbstractController
 
         $hasConflict = false;
         foreach ($apartmentsToAdd as $aptData) {
-            $period = $periodService->parse(
+            $input = $periodService->parse(
                 is_string($aptData['from'] ?? null) ? $aptData['from'] : '',
                 is_string($aptData['end'] ?? null) ? $aptData['end'] : '',
             );
@@ -568,6 +586,8 @@ class ReservationServiceController extends AbstractController
                 $hasConflict = true;
                 continue;
             }
+            // The last selected cell is the departure day, for an event space the last day.
+            $period = $periodService->forRoom($input, $room);
             $isselactable = $rs->isApartmentAvailable($period->start, $period->end, $room, 0);
             if ($isselactable) {
                 $newReservationsInformationArray[] = new ReservationObject(
@@ -761,6 +781,11 @@ class ReservationServiceController extends AbstractController
     public function previewNewReservationAction(ManagerRegistry $doctrine, CSRFProtectionService $csrf, RequestStack $requestStack, InvoiceService $is, ReservationService $rs, PriceService $ps, TouristTaxService $touristTaxService, Request $request)
     {
         $em = $doctrine->getManager();
+        $origins = $em->getRepository(ReservationOrigin::class)->findAll();
+        if ([] === $origins) {
+            return $this->render('Reservations/reservation_form_missing_origin.html.twig');
+        }
+
         $tab = $request->request->get('tab', 'booker');
 
         if (null != $request->request->get('customerid')) {
@@ -794,11 +819,8 @@ class ReservationServiceController extends AbstractController
             $requestStack->getSession()->set('customersInReservation', $customersInReservation);
         }
 
-        $origins = $em->getRepository(ReservationOrigin::class)->findAll();
-        if (count($origins) > 0) {
-            foreach ($reservations as $reservation) {
-                $reservation->setReservationOrigin($origins[0]);
-            }
+        foreach ($reservations as $reservation) {
+            $reservation->setReservationOrigin($origins[0]);
         }
 
         $rs->getMiscPricesInCreation($is, $reservations, $ps, $requestStack);
@@ -859,7 +881,7 @@ class ReservationServiceController extends AbstractController
             'hasActiveTouristTax' => count($reservations) > 0
                 ? $touristTaxService->hasActiveTaxForSubsidiary($reservations[0]->getAppartment()?->getObject())
                 : false,
-            'guestCategoriesById' => $guestCategoriesById ?? [],
+            'guestCategoriesById' => $guestCategoriesById,
             'nightRates' => array_merge(...array_map(static fn (Reservation $reservation): array => $ps->getNightRates($reservation), $reservations)),
         ]);
     }
@@ -881,6 +903,14 @@ class ReservationServiceController extends AbstractController
         $departureTime = $this->createTimeFromRequestValue($departureTimeInput);
 
         if ($csrf->validateCSRFToken($request)) {
+            $originId = filter_var($request->request->get('reservation-origin'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            $origin = false === $originId ? null : $em->getRepository(ReservationOrigin::class)->find($originId);
+            if (null === $origin) {
+                $this->addFlash('warning', 'reservation.flash.origin.required');
+
+                return $this->render('feedback.html.twig', ['error' => true]);
+            }
+
             $newReservationsInformationArray = $requestStack->getSession()->get('reservationInCreation');
 
             $booker = $em->getRepository(Customer::class)->find($requestStack->getSession()->get('booker'));
@@ -888,8 +918,6 @@ class ReservationServiceController extends AbstractController
             $reservations = $rs->createReservationsFromReservationInformationArray($newReservationsInformationArray, $booker);
 
             $customersInReservation = $requestStack->getSession()->get('customersInReservation');
-
-            $origin = $em->getRepository(ReservationOrigin::class)->find($request->request->get('reservation-origin'));
 
             $pricesInCreation = $requestStack->getSession()->get('reservatioInCreationPrices', []);
             $groupUuid = count($reservations) > 1 ? Uuid::v4() : null;
@@ -938,7 +966,7 @@ class ReservationServiceController extends AbstractController
      * Gets an already existing reservation and shows it.
      */
     #[Route('/get/{id}', name: 'reservations.get.reservation', methods: ['GET'])]
-    public function getReservationAction(ManagerRegistry $doctrine, CSRFProtectionService $csrf, RequestStack $requestStack, InvoiceService $is, PriceService $ps, TouristTaxService $touristTaxService, GuestCheckInReviewService $guestCheckInReview, PricePromiseService $pricePromises, Request $request, Reservation $reservation): Response
+    public function getReservationAction(ManagerRegistry $doctrine, CSRFProtectionService $csrf, RequestStack $requestStack, InvoiceService $is, PriceService $ps, TouristTaxService $touristTaxService, GuestCheckInReviewService $guestCheckInReview, PricePromiseService $pricePromises, ReservationConfirmationService $confirmations, Request $request, Reservation $reservation): Response
     {
         $tab = $request->query->get('tab', 'booker');
         $em = $doctrine->getManager();
@@ -997,6 +1025,8 @@ class ReservationServiceController extends AbstractController
             'guestCheckIn' => $guestCheckInReview->buildTab($reservation, $this->isGranted('ROLE_CUSTOMERS')),
             'priceListChange' => $this->priceListChange($pricePromises, $reservation),
             'nightRates' => $ps->getNightRates($reservation),
+            'confirmationEnabled' => null !== $confirmations->emailTemplate(),
+            'confirmationSendsImmediately' => $confirmations->sendsImmediately(),
         ]);
     }
 
@@ -1046,6 +1076,98 @@ class ReservationServiceController extends AbstractController
         return $this->forward('App\Controller\ReservationServiceController::getReservationAction', [
             'id' => $reservation->getId(),
         ], ['tab' => 'prices']);
+    }
+
+    /**
+     * Opens the booking confirmation in the mail editor, as choosing the template under
+     * conversations would, with the rooms of the booking selected, the attachments from the
+     * settings added and the address picked from the button. The user edits and sends it there.
+     * When the settings say to send right away, it goes out at once instead and the details
+     * dialog comes back on the conversations tab.
+     */
+    #[Route('/{id}/confirmation', name: 'reservations.confirmation.open', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    #[IsGranted('ROLE_RESERVATIONS')]
+    public function openConfirmationAction(ReservationConfirmationService $confirmations, ReservationService $rs, RequestStack $requestStack, TranslatorInterface $translator, LoggerInterface $logger, Request $request, Reservation $reservation): Response
+    {
+        if (!$this->isCsrfTokenValid('reservation-confirmation-'.$reservation->getId(), $request->request->getString('_token'))) {
+            $this->addFlash('warning', 'flash.invalidtoken');
+
+            return $this->render('feedback.html.twig');
+        }
+        if (null === $confirmations->emailTemplate()) {
+            throw $this->createNotFoundException();
+        }
+        if ($confirmations->sendsImmediately()) {
+            return $this->sendConfirmation($confirmations, $translator, $logger, $reservation, $request->request->getString('email'));
+        }
+
+        try {
+            $confirmation = $confirmations->prepare($reservation);
+        } catch (WorkflowSkippedException $e) {
+            $this->addFlash('warning', $e->getMessage());
+
+            return $this->render('feedback.html.twig');
+        }
+        if (null === $confirmation) {
+            throw $this->createNotFoundException();
+        }
+
+        $rs->resetSelectedReservations();
+        foreach ($confirmation->reservations as $groupReservation) {
+            $rs->addReservationToSelection((int) $groupReservation->getId());
+        }
+        $session = $requestStack->getSession();
+        $session->set('selectedTemplateId', $confirmation->emailTemplate->getId());
+        $session->set('templateAttachmentIds', $confirmation->attachmentIds);
+        $session->set(self::EMAIL_DRAFT_SESSION_KEY, ['to' => $this->bookerEmail($reservation, $request->request->getString('email')), 'subject' => '', 'msg' => '']);
+
+        // As at the start of the template selection: the mail, not an attachment, is being edited
+        $request->request->set('inProcess', 'false');
+
+        return $this->forward('App\Controller\ReservationServiceController::previewTemplateAction', [
+            'id' => $confirmation->emailTemplate->getId(),
+            'warnings' => $confirmation->warnings,
+        ]);
+    }
+
+    /** Sends the confirmation without the editor and shows the details dialog with the outcome. */
+    private function sendConfirmation(ReservationConfirmationService $confirmations, TranslatorInterface $translator, LoggerInterface $logger, Reservation $reservation, string $email): Response
+    {
+        $tab = 'booker';
+        if ([] === ($reservation->getBooker()?->getEmails() ?? [])) {
+            $this->addFlash('warning', 'reservation.confirmation.no_recipient');
+        } else {
+            try {
+                $confirmations->send($reservation, $this->bookerEmail($reservation, $email));
+                $this->addFlash('success', 'reservation.confirmation.sent');
+                $tab = 'correspondence';
+            } catch (TransportExceptionInterface $e) {
+                // The transport message may name the recipient, so it stays out of the log.
+                $logger->error('Booking confirmation could not be sent', ['reservation_id' => $reservation->getId(), 'exception' => $e::class]);
+                $this->addFlash('danger', 'reservation.confirmation.failed');
+            } catch (\RuntimeException $e) {
+                // WorkflowSkippedException and template errors from TemplatesService both carry a
+                // message meant for the user.
+                $this->addFlash('warning', $translator->trans('reservation.confirmation.not_sent', ['%reason%' => $e->getMessage()]));
+            }
+        }
+
+        return $this->forward('App\Controller\ReservationServiceController::getReservationAction', [
+            'id' => $reservation->getId(),
+        ], ['tab' => $tab]);
+    }
+
+    /** The booker's address picked on the button; an address that is not the booker's falls back to the first. */
+    private function bookerEmail(Reservation $reservation, string $chosen): string
+    {
+        $emails = $reservation->getBooker()?->getEmails() ?? [];
+        foreach ($emails as $email) {
+            if (0 === strcasecmp($email, $chosen)) {
+                return $email;
+            }
+        }
+
+        return $emails[0] ?? '';
     }
 
     /**
@@ -1134,7 +1256,9 @@ class ReservationServiceController extends AbstractController
 
         // Reject an oversized move before updateReservation() can mutate the
         // managed entity. isRoomAvailable() repeats this as the source of truth.
-        if ($apartment instanceof Appartment && !$availabilityService->hasCapacity($apartment, $persons)) {
+        if ($apartment instanceof Appartment && !$rs->isSameKindOfRoom($reservation, $apartment)) {
+            $this->addFlash('warning', 'reservation.move.other_kind');
+        } elseif ($apartment instanceof Appartment && !$availabilityService->hasCapacity($apartment, $persons)) {
             $this->addFlash('warning', 'reservation.move.capacity');
         } elseif (!$rs->updateReservation($request, $reservation)) {
             $this->addFlash('warning', 'reservation.flash.update.conflict');
@@ -1179,6 +1303,13 @@ class ReservationServiceController extends AbstractController
                 'success' => false,
                 'message' => $translator->trans('reservation.move.error'),
             ], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!$reservationService->isSameKindOfRoom($reservation, $apartment)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => $translator->trans('reservation.move.other_kind'),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         if (!$availabilityService->hasCapacity($apartment, $reservation->getPersons())) {
@@ -1265,11 +1396,8 @@ class ReservationServiceController extends AbstractController
                     $rs->updateReservationCustomers($reservation, $customer, $tab);
                 } else {
                     $customersInReservation = $requestStack->getSession()->get('customersInReservation');
-                    $customerIsAlreadyInReservation = false;
-                    if (!$customerIsAlreadyInReservation) {
-                        $customersInReservation[] = ['id' => $customer->getId(), 'appartmentId' => $request->request->get('appartmentId')];
-                        $requestStack->getSession()->set('customersInReservation', $customersInReservation);
-                    }
+                    $customersInReservation[] = ['id' => $customer->getId(), 'appartmentId' => $request->request->get('appartmentId')];
+                    $requestStack->getSession()->set('customersInReservation', $customersInReservation);
                 }
             }
         }
@@ -1561,7 +1689,7 @@ class ReservationServiceController extends AbstractController
      * @return Response
      */
     #[Route('/select/template/{id}', name: 'reservations.select.template.preview', methods: ['POST'])]
-    public function previewTemplateAction(ManagerRegistry $doctrine, CSRFProtectionService $csrf, RequestStack $requestStack, TemplatesService $ts, Request $request, ReservationService $rs, int $id)
+    public function previewTemplateAction(ManagerRegistry $doctrine, CSRFProtectionService $csrf, RequestStack $requestStack, TemplatesService $ts, Request $request, ReservationService $rs, ReservationMailRecipientResolver $recipients, int $id)
     {
         $em = $doctrine->getManager();
         $inProcess = $request->request->get('inProcess');
@@ -1594,6 +1722,8 @@ class ReservationServiceController extends AbstractController
         }
 
         return $this->render('Reservations/reservation_form_preview_template.html.twig', [
+            // Attachments the booking confirmation could not add (openConfirmationAction)
+            'warnings' => $request->attributes->get('warnings', []),
             'templateOutput' => $templateOutput,
             'templateSubject' => $templateSubject,
             'template' => $template,
@@ -1603,6 +1733,7 @@ class ReservationServiceController extends AbstractController
             'attachmentIds' => $requestStack->getSession()->get('templateAttachmentIds'),
             'attachments' => $attachments,
             'emailDraft' => $emailDraft,
+            'defaultRecipient' => $recipients->defaultRecipient($reservations),
         ]);
     }
 

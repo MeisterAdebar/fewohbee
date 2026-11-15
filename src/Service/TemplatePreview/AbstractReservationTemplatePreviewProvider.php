@@ -221,7 +221,7 @@ abstract class AbstractReservationTemplatePreviewProvider implements ITemplatePr
                 'description' => 'templates.editor.reservation.appartment_positions.desc',
                 'group' => 'Reservation',
                 'complexity' => 'easy',
-                'content' => "<table style=\"width:100%; border-collapse: collapse;\"><tr><th>{{ 'reservation.startdate'|trans }}</th><th>{{ 'reservation.enddate'|trans }}</th><th>{{ 'reservation.appartment.name'|trans }}</th><th>{{ 'reservation.persons'|trans }}</th><th>{{ 'reservation.price'|trans }}</th></tr><tr data-repeat=\"apartmentPositions\" data-repeat-as=\"position\"><td>[[ position.startDate|date('d.m.Y') ]]</td><td>[[ position.endDate|date('d.m.Y') ]]</td><td>[[ position.description ]]</td><td>[[ position.persons ]]</td><td>[[ position.totalPrice ]] €</td></tr></table>",
+                'content' => "<table style=\"width:100%; border-collapse: collapse;\"><tr><th>{{ 'reservation.startdate'|trans }}</th><th>{{ 'reservation.enddate'|trans }}</th><th>{{ 'reservation.appartment.name'|trans }}</th><th>{{ 'reservation.persons'|trans }}</th><th>{{ 'reservation.price'|trans }}</th></tr><tr data-repeat=\"apartmentPositions\" data-repeat-as=\"position\"><td>[[ position.startDate|date('d.m.Y') ]]</td><td>[[ position.visibleEndDate|date('d.m.Y') ]]</td><td>[[ position.description ]]</td><td>[[ position.persons ]]</td><td>[[ position.totalPrice ]] €</td></tr></table>",
             ],
             [
                 'id' => 'reservation.misc_positions.line',
@@ -350,8 +350,8 @@ abstract class AbstractReservationTemplatePreviewProvider implements ITemplatePr
         $status->setContrastColor('#ffffff');
 
         $reservation = new Reservation();
-        $reservation->setStartDate(new \DateTimeImmutable('today'));
-        $reservation->setEndDate(new \DateTimeImmutable('today +3 days'));
+        $reservation->setStartDate(new \DateTime('today'));
+        $reservation->setEndDate(new \DateTime('today +3 days'));
         $reservation->setPersons(2);
         $reservation->setBooker($customer);
         $reservation->setAppartment($appartment);

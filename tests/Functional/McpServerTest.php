@@ -201,6 +201,21 @@ final class McpServerTest extends WebTestCase
         self::assertSame(McpToolCallOutcome::DENIED, $this->latestAudit('get_property_overview')?->getOutcome());
     }
 
+    public function testPropertyOverviewNamesTheKindOfEachRoomCategory(): void
+    {
+        $this->configureMcp(enabled: true);
+        [, $token] = $this->createUserWithToken(['ROLE_ADMIN'], [ApiScope::MCP_ACCESS, ApiScope::RESERVATIONS_READ]);
+
+        $result = $this->callTool($token, 'get_property_overview');
+
+        self::assertFalse($result['isError'] ?? false);
+        $categories = $result['structuredContent']['roomCategories'];
+        self::assertNotEmpty($categories);
+        foreach ($categories as $category) {
+            self::assertContains($category['kind'], ['accommodation', 'event_space']);
+        }
+    }
+
     public function testScopeDoesNotExceedTheOwnersRoles(): void
     {
         $this->configureMcp(enabled: true);
@@ -735,6 +750,30 @@ final class McpServerTest extends WebTestCase
         $result = $this->callTool($token, 'get_property_overview', [], $publicHost);
         self::assertResponseIsSuccessful();
         self::assertFalse($result['isError'] ?? false);
+    }
+
+    public function testATokenCanBeRevokedOnTheSettingsPage(): void
+    {
+        $this->configureMcp(enabled: true);
+        $admin = $this->createUserWithToken(['ROLE_ADMIN'], [ApiScope::MCP_ACCESS])[0];
+        $token = $this->em()->getRepository(\App\Entity\ApiToken::class)->findOneBy(['user' => $admin]);
+        self::assertNotNull($token);
+        $tokenId = $token->getId();
+        $this->client->loginUser($admin);
+
+        $crawler = $this->client->request('GET', '/settings/mcp');
+        self::assertResponseIsSuccessful();
+        // The confirmation popover only starts inside a controller that enables it.
+        $icon = $crawler->filter('[data-controller~="settings"] [data-popover="delete"]')
+            ->reduce(static fn (Crawler $node): bool => str_contains((string) $node->attr('data-bs-content'), '/settings/mcp/tokens/'.$tokenId.'/revoke'));
+        self::assertCount(1, $icon);
+
+        $popover = new Crawler((string) $icon->attr('data-bs-content'));
+        $this->client->request('DELETE', (string) $popover->filter('form')->attr('action'), ['_token' => $popover->filter('input[name="_token"]')->attr('value')]);
+
+        self::assertResponseStatusCodeSame(204);
+        $this->em()->clear();
+        self::assertNull($this->em()->find(\App\Entity\ApiToken::class, $tokenId));
     }
 
     public function testInvalidHostsAreNotSaved(): void

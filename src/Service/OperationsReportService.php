@@ -310,7 +310,7 @@ class OperationsReportService
             }
 
             $startKey = $reservation->getStartDate()->format('Y-m-d');
-            $endKey = $reservation->getEndDate()->format('Y-m-d');
+            $endKey = $reservation->getVisibleEndDate()->format('Y-m-d');
 
             $frontdeskSectionKey = null;
             if ($startKey === $dayKey) {
@@ -332,10 +332,10 @@ class OperationsReportService
                 'roomNumber' => '' !== $roomNumber ? $roomNumber : '-',
                 'roomLabel' => $roomLabel,
                 'guest' => $this->resolveReservationGuestLabel($reservation),
-                'persons' => $reservation->getPersons() ?? '-',
+                'persons' => $reservation->getPersons(),
                 'start' => $reservation->getStartDate(),
-                'end' => $reservation->getEndDate(),
-                'period' => $reservation->getStartDate()->format('d.m.Y').' - '.$reservation->getEndDate()->format('d.m.Y'),
+                'end' => $reservation->getVisibleEndDate(),
+                'period' => $reservation->getStartDate()->format('d.m.Y').' - '.$reservation->getVisibleEndDate()->format('d.m.Y'),
                 'frontdeskSectionKey' => $frontdeskSectionKey,
                 'invoiceStatusLabelKey' => $invoiceStatusLabelKey,
                 'apartmentId' => null !== $apartment ? $apartment->getId() : null,
@@ -447,9 +447,9 @@ class OperationsReportService
                     continue;
                 }
                 $cells[] = [
-                    'occupancyLabelKey' => (string) ($cell['occupancyLabelKey'] ?? ''),
+                    'occupancyLabelKey' => (string) $cell['occupancyLabelKey'],
                     'statusLabelKey' => (string) ($cell['statusLabelKey'] ?? ''),
-                    'guests' => (string) ($cell['guests'] ?? ''),
+                    'guests' => (string) $cell['guests'],
                 ];
             }
 

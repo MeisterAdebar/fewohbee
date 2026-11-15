@@ -182,6 +182,7 @@ class ReceiptProposalService
             $sameNumber = array_filter(
                 $this->entryRepository->findWithInvoiceNumberContaining(ltrim(trim((string) $proposal->getReceiptNumber()), '0'), $date->modify('-1 year'), $date->modify('+1 year')),
                 static fn (BookingEntry $entry): bool => $number === self::normalizeNumber($entry->getInvoiceNumber())
+                    && $entry->getAmountFloat() > 0.0
                     && !\in_array($entry->getId(), $toSplit, true),
             );
             if ([] !== $sameNumber) {
@@ -197,8 +198,10 @@ class ReceiptProposalService
                 null,
                 500,
             ),
+            // Only a positive amount can have paid a receipt; the journal form also accepts 0.00.
             static fn (BookingEntry $entry): bool => !$entry->isOpeningBalance()
                 && null !== self::paymentAccount($entry)
+                && $entry->getAmountFloat() > 0.0
                 && !\in_array($entry->getId(), $toSplit, true)
                 && (null === $number || null === self::normalizeNumber($entry->getInvoiceNumber())),
         );
