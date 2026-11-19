@@ -21,6 +21,38 @@
     padding-left: 2.25rem;
 }
 
+/* The number of records of the list, at the right end of the field (SearchField count); the
+   field keeps its text and its clear button clear of it */
+.search-field-count {
+    position: absolute;
+    top: 50%;
+    right: .8rem;
+    transform: translateY(-50%);
+    color: var(--feb-text-muted);
+    font-size: var(--feb-font-size-sm);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+}
+
+.search-field:has(.search-field-count) .form-control {
+    padding-right: 3.25rem;
+}
+
+/* Phones: the placeholder a little smaller, so it fits beside the count */
+@media (max-width: 575.98px) {
+    .search-field:has(.search-field-count) .form-control::placeholder {
+        font-size: .875em;
+    }
+}
+
+/* As tall as an icon button on touch screens, so a toolbar keeps its height with or without one */
+@media (pointer: coarse) {
+    .search-field .form-control {
+        min-height: 2.75rem;
+    }
+}
+
 /* Initials of a person */
 .avatar {
     display: inline-flex;

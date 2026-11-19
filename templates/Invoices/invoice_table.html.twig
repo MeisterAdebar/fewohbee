@@ -1,19 +1,27 @@
 {# The invoice list of the overview; reloaded on its own by invoices_controller.js when searching or paging #}
 {% set total = invoices.count %}
+{# paged-list: its paging stays at the bottom of the screen while the rows scroll, and is
+   compact on touch screens (records.css, touch.css). The count stands in the search field,
+   which takes it from here after a search (search_count.js). #}
+<div class="paged-list" data-search-count="{{ total }}" data-search-count-label="{{ 'invoice.list.count'|trans({'%count%': total}) }}">
 {% if total == 0 %}
     <twig:EmptyState icon="file-invoice" :title="'invoice.list.empty'|trans">
         {{- 'invoice.list.empty.hint'|trans -}}
     </twig:EmptyState>
 {% else %}
     <div class="table-responsive">
-        <table class="table table-hover align-middle data-table data-table-stack invoice-table" data-controller="row-link" data-action="click->row-link#open">
+        <table class="table table-hover align-middle data-table data-table-stack invoice-table touch-table" data-controller="row-link" data-action="click->row-link#open">
             <thead>
             <tr>
-                <th>{{ 'invoice.number'|trans }}</th>
-                <th>{{ 'invoice.date'|trans }}</th>
-                <th>{{ 'invoice.list.name'|trans }}</th>
-                <th>{{ 'invoice.company'|trans }}</th>
-                <th>{{ 'invoice.status'|trans }}</th>
+                <th class="text-center"><span class="touch-table-long">{{ 'invoice.number'|trans }}</span><span class="touch-table-short"><span class="touch-table-phone-hidden">{{ 'invoice.number.header.short'|trans }}</span><span class="touch-table-phone-only">{{ 'invoice.number.header.phone'|trans }}</span></span></th>
+                <th class="text-center"><span class="touch-table-long">{{ 'invoice.date'|trans }}</span><span class="touch-table-short">{{ 'invoice.date.short'|trans }}</span></th>
+                <th class="touch-table-cut" style="--touch-table-share: 55%">{{ 'invoice.list.name'|trans }}</th>
+                <th class="touch-table-cut" style="--touch-table-share: 45%">{{ 'invoice.company'|trans }}</th>
+                <th class="text-center">
+                    {# Phones: an icon instead of the word, so the names keep their room #}
+                    <span class="touch-table-phone-hidden">{{ 'invoice.status'|trans }}</span>
+                    <span class="touch-table-phone-only" role="img" title="{{ 'invoice.status'|trans }}" aria-label="{{ 'invoice.status'|trans }}"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+                </th>
                 <th class="data-table-actions"><span class="visually-hidden">{{ 'invoice.action'|trans }}</span></th>
             </tr>
             </thead>
@@ -23,7 +31,7 @@
                 {% set readiness = einvoiceReadiness[invoice.id] ?? null %}
                 {% set title = 'invoice.number.short'|trans ~ ' ' ~ invoice.number %}
                 <tr>
-                    <td>
+                    <td class="text-center">
                         <a href="#" class="data-table-link" data-row-link-target="link"
                            data-action="click->invoices#showInvoiceAction"
                            data-url="{{ path('invoices.get.invoice', {'id': invoice.id}) }}"
@@ -36,13 +44,19 @@
                             </span>
                         </a>
                     </td>
-                    <td class="cell-wide text-nowrap">{{ invoice.date|date('d.m.Y') }}</td>
-                    <td class="cell-wide">{{ name }}</td>
-                    <td class="cell-meta">{{- invoice.company -}}</td>
-                    <td class="cell-meta">
+                    <td class="cell-wide text-nowrap text-center">{{ invoice.date|date('d.m.') }}<span class="touch-table-phone-hidden">{{ invoice.date|date('Y') }}</span></td>
+                    <td class="cell-wide touch-table-cut">{{ name }}</td>
+                    <td class="cell-meta touch-table-cut">{{- invoice.company -}}</td>
+                    <td class="cell-meta text-center">
                         <span class="invoice-state">
                             <span class="cell-narrow">{{ invoice.date|date('d.m.Y') }}</span>
-                            <twig:InvoiceStatus :status="invoice.status"/>
+                            {# The status is the colour of an icon, the word in its title: the icon of
+                               the way of payment, or one of its own without one #}
+                            {% set status = {
+                                1: ['invoice.status.unpaid', 'text-warning', 'fa-hourglass-half'],
+                                2: ['invoice.status.paid', 'text-success', 'fa-circle-check'],
+                                3: ['invoice.status.prepaid', 'text-info', 'fa-circle-check']
+                            }[invoice.status] ?? ['invoice.status.canceled', 'text-body-secondary', 'fa-ban'] %}
                             {% if invoice.paymentMeans %}
                                 {% set paymentMeansIcon = {
                                     'CASH': 'fa-coins',
@@ -51,10 +65,13 @@
                                     'SEPA_CREDIT_TRANSFER': 'fa-building-columns',
                                     'SEPA_DIRECT_DEBIT': 'fa-money-check'
                                 }[invoice.paymentMeans.name]|default('fa-circle-question') %}
-                                <span class="text-body-secondary" role="img"
-                                      title="{{ invoice.paymentMeans.name|trans }}"
-                                      aria-label="{{ invoice.paymentMeans.name|trans }}">
+                                {% set statusLabel = status[0]|trans ~ ' · ' ~ invoice.paymentMeans.name|trans %}
+                                <span class="{{ status[1] }}" role="img" title="{{ statusLabel }}" aria-label="{{ statusLabel }}">
                                     <i class="fa-solid {{ paymentMeansIcon }}" aria-hidden="true"></i>
+                                </span>
+                            {% else %}
+                                <span class="{{ status[1] }}" role="img" title="{{ status[0]|trans }}" aria-label="{{ status[0]|trans }}">
+                                    <i class="fa-solid {{ status[2] }}" aria-hidden="true"></i>
                                 </span>
                             {% endif %}
                             {# Per invoice, not list-wide: with per-branch issuers the profile can differ. #}
@@ -70,7 +87,7 @@
                                         text: 'invoice.einvoice.status.missing'|trans ~ ':' ~ "\n" ~ readiness.result.messageKeys|map(key => key|trans)|join("\n"),
                                     } %}
                                 {% endif %}
-                                <span class="{{ einvoice.class }}" role="img" title="{{ einvoice.text }}" aria-label="{{ einvoice.text }}">
+                                <span class="{{ einvoice.class }} touch-table-phone-hidden" role="img" title="{{ einvoice.text }}" aria-label="{{ einvoice.text }}">
                                     <i class="fa-solid fa-{{ einvoice.icon }}" aria-hidden="true"></i>
                                 </span>
                             {% endif %}
@@ -98,7 +115,8 @@
     </div>
 {% endif %}
 <div class="data-footer">
-    <span>{{ 'invoice.list.count'|trans({'%count%': total}) }}</span>
+    <span></span>
     <input id="page" type="hidden" name="page" value="{{ page }}" />
     {% include 'paginator.html.twig' with { 'url' : path('invoices.overview'), 'pagination_action': 'click->invoices#paginateAction', 'swipe_nav': true } %}
+</div>
 </div>

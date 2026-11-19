@@ -25,6 +25,7 @@ invoice.customer.section.payment: Zahlungsangaben
 invoice.customer.einvoice.hint: 'Nur nötig, wenn E-Rechnungen an Behörden (XRechnung) gestellt werden. Für Privat- und Geschäftsgäste sind diese Felder in der Regel nicht erforderlich.'
 invoice.customer.payment.hint: 'Nur nötig bei Kartenzahlung oder SEPA-Lastschrift.'
 invoice.date: Rechnungsdatum
+invoice.date.short: Datum
 invoice.date2: Datum
 invoice.delete.ask: 'Diese Rechnung unwiderruflich löschen?'
 invoice.description: Rechnungsverwaltung
@@ -52,6 +53,8 @@ invoice.miscellaneous.position.amount.flat_help: 'Pauschalpreis: 1x pro Buchung'
 invoice.netto: Netto
 invoice.number: Rechnungsnr.
 invoice.number.short: Rechnung
+invoice.number.header.short: Nummer
+invoice.number.header.phone: Nr.
 invoice.einvoice: E-Rechnung
 invoice.open.reservations.filter.customer: 'Reservierungen nach Kunden durchsuchen'
 invoice.open.reservations.filter.time: 'Reservierungen in Zeitraum durchsuchen'
@@ -67,7 +70,7 @@ invoice.price.total: Gesamt
 invoice.remark: Bemerkungen
 invoice.reservation: Reservierung
 invoice.reservations.unavailable: 'Mindestens eine ausgewählte Reservierung ist nicht mehr vorhanden. Starte die Rechnungserstellung erneut und wähle die Reservierungen neu aus.'
-invoice.search.placeholder: 'Rechnungen durchsuchen'
+invoice.search.placeholder: 'Belege durchsuchen'
 invoice.select.customer.search.input.placeholder: 'Nachname Kunde'
 invoice.select.open.reservation: 'Reservierung ohne Rechnung auswählen'
 invoice.startdate: Von

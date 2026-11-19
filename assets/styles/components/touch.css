@@ -27,12 +27,93 @@
     .fab-add-clearance {
         padding-bottom: 5rem;
     }
+
+    /* The footer of a paged list stays at the bottom (records.css), level with the round
+       button: its paging keeps clear of it on both sides, so the page needs no room below.
+       None at all: at the end of the page the footer must stand where it stood while it was
+       stuck to the bottom, or the round button would no longer sit in its middle. */
+    .fab-add-clearance:has(.paged-list) {
+        padding-bottom: 0;
+    }
+
+    /* The round button sits in the middle of the footer: the footer takes a fixed height and
+       the button keeps half the rest of it below itself (--feb-fab-gap, 1rem elsewhere) */
+    body:has(.paged-list) {
+        --feb-paged-footer-height: 4.5rem;
+        --feb-fab-gap: calc((var(--feb-paged-footer-height) - 3.5rem) / 2);
+    }
+
+    .paged-list .data-footer {
+        min-height: var(--feb-paged-footer-height);
+        align-content: center;
+        padding-inline: 4.5rem;
+    }
+
+    /* A compact paging (paginator.html.twig): one line next to the round button */
+    .paged-list .page-item-full {
+        display: none;
+    }
+
+    .paged-list .page-item-compact {
+        display: block;
+    }
+}
+
+/* A paged list shorter than the screen still reaches down to the bottom, so its footer stands
+   level with the round button: the frame, the page and the card grow to the height of the
+   screen, the room left goes to the card above the footer */
+@media not all and (hover: hover) and (pointer: fine) {
+    body:has(.paged-list) {
+        display: flex;
+        flex-direction: column;
+        min-height: 100dvh;
+    }
+
+    body:has(.paged-list) .app-main,
+    .app-main :has(.paged-list),
+    .paged-list,
+    .paged-list > .data-card {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    .paged-list .data-footer {
+        margin-top: auto;
+    }
+}
+
+/* Tablets held upright: a paged list takes the width of the screen instead of the steps of
+   the container, which leave a wide margin on both sides */
+@media (not ((hover: hover) and (pointer: fine))) and (max-width: 991.98px) {
+    .container:has(.paged-list) {
+        max-width: none;
+    }
+}
+
+/* Only where a paged list on a touch screen asks for it, see above */
+.page-item-compact {
+    display: none;
+}
+
+/* Phones: smaller page numbers, kept left of the round add button rather than centred, so
+   they fit in one line where the screen allows */
+@media (not ((hover: hover) and (pointer: fine))) and (max-width: 575.98px) {
+    .paged-list .data-footer {
+        padding-inline: .5rem 4rem;
+    }
+
+    .paged-list .data-footer .pagination {
+        --bs-pagination-padding-x: .45rem;
+        --bs-pagination-padding-y: .3rem;
+        --bs-pagination-font-size: .875rem;
+    }
 }
 
 .fab-add {
     position: fixed;
     right: 1rem;
-    bottom: calc(1rem + max(env(safe-area-inset-bottom), var(--feb-bottomnav-offset, 0px)));
+    bottom: calc(var(--feb-fab-gap, 1rem) + max(env(safe-area-inset-bottom), var(--feb-bottomnav-offset, 0px)));
     z-index: 1030;
     width: 3.5rem;
     height: 3.5rem;
@@ -56,7 +137,7 @@
 .fab-add-dropdown {
     position: fixed;
     right: 1rem;
-    bottom: calc(1rem + max(env(safe-area-inset-bottom), var(--feb-bottomnav-offset, 0px)));
+    bottom: calc(var(--feb-fab-gap, 1rem) + max(env(safe-area-inset-bottom), var(--feb-bottomnav-offset, 0px)));
     z-index: 1030;
 }
 

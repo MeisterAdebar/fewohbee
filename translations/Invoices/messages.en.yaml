@@ -25,6 +25,7 @@ invoice.customer.section.payment: Payment details
 invoice.customer.einvoice.hint: Only needed when sending e-invoices to public authorities (XRechnung). Private and business guests usually do not need these fields.
 invoice.customer.payment.hint: Only needed for card payment or SEPA direct debit.
 invoice.date: Invoice Date
+invoice.date.short: Date
 invoice.date2: Date
 invoice.delete.ask: Delete this invoice?
 invoice.description: Invoice Management
@@ -52,6 +53,8 @@ invoice.miscellaneous.position.amount.flat_help: 'Flat rate: 1x per booking'
 invoice.netto: Net
 invoice.number: Invoice number
 invoice.number.short: Inv. no.
+invoice.number.header.short: Number
+invoice.number.header.phone: No.
 invoice.einvoice: E-Invoice
 invoice.open.reservations.filter.customer: Browse reservations for customers
 invoice.open.reservations.filter.time: Search reservations in period

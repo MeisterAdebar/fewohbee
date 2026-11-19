@@ -124,7 +124,7 @@
 <h3 class="styleguide-heading">Record list <code class="styleguide-ref">DataCard · SearchField · Avatar · StatusBadge</code></h3>
 <twig:DataCard>
     <twig:block name="toolbar">
-        <twig:SearchField placeholder="Search" input:id="sg-search-{{ scheme }}"/>
+        <twig:SearchField placeholder="Search" input:id="sg-search-{{ scheme }}" :count="3" countLabel="3 records"/>
         <button type="button" class="btn btn-secondary ms-auto"><i class="fas fa-filter me-1"></i> Filter</button>
     </twig:block>
     <div class="table-responsive">

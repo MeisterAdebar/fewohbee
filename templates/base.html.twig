@@ -19,6 +19,13 @@
     {% block javascripts %}
     {% endblock %}
     <link rel="icon" type="image/png" href="{{ app.request.basepath }}/img/favicon.png" />
+    {# Installable as an app (public/manifest.webmanifest): started from the home screen it runs
+       without the browser's address bar. The status bar takes the colour of the top bar
+       (--feb-surface of the light and the dark scheme). #}
+    <link rel="manifest" href="{{ app.request.basepath }}/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="{{ app.request.basepath }}/img/app-icon-192.png">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#161b22" media="(prefers-color-scheme: dark)">
 </head>
 <body>
 {% block body %}
@@ -48,7 +55,8 @@
           </div>
         </div>
     {% endblock %}
-    <div class="app-main">
+    {# On touch screens scrolling down makes room, scrolling up gives the navigation back; the reservation overview has its own steps #}
+    <div class="app-main"{% block hide_nav %} data-controller="hide-nav"{% endblock %}>
     {% block flashMessage %}
         <div class="container mt-3">            
             {% for type, flashMessages in app.flashes %}

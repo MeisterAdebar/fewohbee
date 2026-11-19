@@ -19,6 +19,7 @@
         <twig:DataCard>
             <twig:block name="toolbar">
                 <twig:SearchField :placeholder="'invoice.search.placeholder'|trans" :value="search"
+                                  :count="invoices.count" :countLabel="'invoice.list.count'|trans({'%count%': invoices.count})"
                                   id="invoices-search-form"
                                   data-search-url="{{ path('invoices.search') }}"
                                   data-action="submit->invoices#doSearchAction"

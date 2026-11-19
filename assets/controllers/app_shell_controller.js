@@ -52,6 +52,8 @@ export default class extends Controller {
 
     setRail(enabled) {
         document.documentElement.classList.toggle(RAIL_CLASS, enabled);
+        // The user's own choice: a swipe down must not open it (hide_nav_controller.js)
+        delete document.documentElement.dataset.hideNavRail;
         const path = document.documentElement.dataset.basePath || '/';
         document.cookie = `${COOKIE}=${enabled ? 'rail' : 'full'}; path=${path}; max-age=31536000; samesite=lax`;
         // Views that size themselves to the window (reservation table) measure again

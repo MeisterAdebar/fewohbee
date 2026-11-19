@@ -21,6 +21,7 @@
         <twig:DataCard>
             <twig:block name="toolbar">
                 <twig:SearchField :placeholder="'customer.search.placeholder'|trans" :value="search"
+                                  :count="customers.count" :countLabel="'customer.list.count'|trans({'%count%': customers.count})"
                                   id="customers-search-form"
                                   data-customers-target="searchForm"
                                   data-action="submit->customers#searchAction"

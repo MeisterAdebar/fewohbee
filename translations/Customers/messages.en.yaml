@@ -40,6 +40,7 @@ customer.id.type.passport: Passport
 customer.lastname: Last Name
 customer.list.bookings: '{0}No bookings|{1}1 booking|]1,Inf[%count% bookings'
 customer.list.bookings.header: Bookings
+customer.list.bookings.header.short: Visits
 customer.list.count: '{0}No guests|{1}1 guest|]1,Inf[%count% guests'
 customer.list.empty: 'No guests found'
 customer.list.empty.hint: 'Adjust your search or add a new guest.'

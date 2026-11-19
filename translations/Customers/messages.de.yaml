@@ -36,6 +36,7 @@ customer.id.type.passport: Reisepass
 customer.lastname: Nachname
 customer.list.bookings: '{0}Keine Buchungen|{1}1 Buchung|]1,Inf[%count% Buchungen'
 customer.list.bookings.header: Buchungen
+customer.list.bookings.header.short: Besuche
 customer.list.count: '{0}Keine Gäste|{1}1 Gast|]1,Inf[%count% Gäste'
 customer.list.empty: 'Keine Gäste gefunden'
 customer.list.empty.hint: 'Passe die Suche an oder lege einen neuen Gast an.'

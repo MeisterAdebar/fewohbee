@@ -1,6 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 import { request as httpRequest } from '../js/http.js';
 import { setModalTitle } from '../js/utils.js';
+import { updateSearchCount } from '../js/search_count.js';
 
 /* stimulusFetch: 'lazy' */
 
@@ -91,6 +92,7 @@ export default class extends Controller {
             target: this.tableTarget,
             onSuccess: (response) => {
                 this.tableTarget.innerHTML = response;
+                updateSearchCount(this.tableTarget, this.hasSearchInputTarget ? this.searchInputTarget : null);
             },
         });
     }

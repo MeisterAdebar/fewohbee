@@ -4,6 +4,7 @@ import {
     request as httpRequest,
     serializeForm as httpSerializeForm,
 } from '../js/http.js';
+import { updateSearchCount } from '../js/search_count.js';
 import {
     setLocalStorageItemIfNotExists,
     getLocalStorageItem,
@@ -602,6 +603,10 @@ export default class extends Controller {
             data: `${httpSerializeForm(form)}&${httpSerializeForm('#page')}`,
             target: table,
             loader: false,
+            onSuccess: (html) => {
+                table.innerHTML = html;
+                updateSearchCount(table, document.getElementById('search'));
+            },
         });
     }
 }

@@ -417,6 +417,54 @@
     }
 }
 
+/* ------------------------------------------------------------------ Scrolling the navigation away */
+
+/* Touch screens below lg: scrolling down slides the bars at the top and at the bottom away
+   (hide_nav_controller.js); from lg up it collapses the sidebar to its rail. They slide rather
+   than leave the layout, so the page does not jump while it scrolls; only the room kept for the
+   bottom bar at the end of the page goes with it. What stands on the bottom
+   bar (the footer of a paged list, the round add button) moves down with it. */
+@media (max-width: 991.98px) {
+    .app-nav,
+    .app-bottomnav,
+    .paged-list .data-footer,
+    .fab-add,
+    .fab-add-dropdown {
+        transition: transform .2s ease, bottom .2s ease;
+    }
+
+    html.hide-nav-hidden .app-nav {
+        transform: translateY(-100%);
+    }
+
+    /* A transform makes the bar the frame of its fixed children: the slide-in menu (app-nav-menu,
+       waiting beside the screen) would then stick out of the page, which grows wider and is
+       zoomed out by mobile browsers, leaving an empty half page below. The bar clips them while
+       it is away and while it slides back (hide-nav-returning, hide_nav_controller.js). */
+    html.hide-nav-hidden .app-nav,
+    html.hide-nav-returning .app-nav {
+        overflow: clip;
+    }
+
+    html.hide-nav-hidden .app-bottomnav {
+        transform: translateY(100%);
+    }
+
+    /* No empty room at the end of the page where the bottom bar was */
+    html.hide-nav-hidden .app-main {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    html.hide-nav-hidden .paged-list .data-footer {
+        bottom: env(safe-area-inset-bottom);
+    }
+
+    html.hide-nav-hidden .fab-add,
+    html.hide-nav-hidden .fab-add-dropdown {
+        bottom: calc(var(--feb-fab-gap, 1rem) + env(safe-area-inset-bottom));
+    }
+}
+
 /* ------------------------------------------------------------------ Reservation overview */
 
 /* Touch, normal view: swiping up hides the bars (stepNormalViewChrome in

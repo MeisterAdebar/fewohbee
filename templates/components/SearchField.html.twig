@@ -3,12 +3,22 @@
  # "input:" onto the field.
  #
  #   <twig:SearchField :placeholder="'customer.search.placeholder'|trans" :value="search"
+ #                     :count="total" :countLabel="'customer.list.count'|trans({'%count%': total})"
  #                     data-action="submit->customers#searchAction"
  #                     input:data-action="input->customers#searchInputAction"/>
+ #
+ # count (optional) shows the number of records of the list at the right end of the field, small
+ # and bold; countLabel is its full text for screen readers ("4153 invoices"). A list reloaded
+ # by a search passes its new count on with assets/js/search_count.js.
  #}
-{% props placeholder, value = '', name = 'search', label = null %}
+{% props placeholder, value = '', name = 'search', label = null, count = null, countLabel = null %}
 <form {{ attributes.defaults({class: 'search-field', role: 'search'}) }}>
     <span class="search-field-icon" aria-hidden="true"><i class="fas fa-search"></i></span>
     <input type="search" {{ attributes.nested('input').defaults({class: 'form-control'}) }} name="{{ name }}"
            placeholder="{{ placeholder }}" aria-label="{{ label ?? placeholder }}" value="{{ value }}"/>
+    {% if count is not null %}
+        <span class="search-field-count" data-search-field-count>
+            <span aria-hidden="true">{{ count }}</span><span class="visually-hidden">{{ countLabel ?? count }}</span>
+        </span>
+    {% endif %}
 </form>

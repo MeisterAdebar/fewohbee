@@ -1,19 +1,23 @@
 {# The guest list of the overview; reloaded on its own by customers_controller.js when searching or paging #}
 {% set total = customers.count %}
+{# paged-list: its paging stays at the bottom of the screen while the rows scroll, and is
+   compact on touch screens (records.css, touch.css). The count stands in the search field,
+   which takes it from here after a search (search_count.js). #}
+<div class="paged-list" data-search-count="{{ total }}" data-search-count-label="{{ 'customer.list.count'|trans({'%count%': total}) }}">
 {% if total == 0 %}
     <twig:EmptyState icon="users" :title="'customer.list.empty'|trans">
         {{- 'customer.list.empty.hint'|trans -}}
     </twig:EmptyState>
 {% else %}
     <div class="table-responsive">
-        <table class="table table-hover align-middle data-table data-table-stack" data-controller="row-link" data-action="click->row-link#open">
+        <table class="table table-hover align-middle data-table data-table-stack touch-table" data-controller="row-link" data-action="click->row-link#open">
             <thead>
             <tr>
-                <th class="data-table-id">ID</th>
-                <th>{{ 'customer.list.name'|trans }}</th>
-                <th>{{ 'customer.company'|trans }}</th>
-                <th>{{ 'customer.city'|trans }}</th>
-                <th class="text-end">{{ 'customer.list.bookings.header'|trans }}</th>
+                <th class="data-table-id touch-table-phone-hidden text-center">ID</th>
+                <th class="touch-table-cut" style="--touch-table-share: 45%">{{ 'customer.list.name'|trans }}</th>
+                <th class="touch-table-cut" style="--touch-table-share: 35%">{{ 'customer.company'|trans }}</th>
+                <th class="touch-table-cut touch-table-phone-hidden" style="--touch-table-share: 20%">{{ 'customer.city'|trans }}</th>
+                <th class="text-center"><span class="touch-table-long">{{ 'customer.list.bookings.header'|trans }}</span><span class="touch-table-short">{{ 'customer.list.bookings.header.short'|trans }}</span></th>
                 <th class="data-table-actions"><span class="visually-hidden">{{ 'customer.action'|trans }}</span></th>
             </tr>
             </thead>
@@ -24,8 +28,8 @@
                     {% set cities = customer.customerAddresses|map(address => address.city)|filter(value => value is not empty) %}
                     {% set bookings = customer.bookedReservations|length %}
                     <tr>
-                        <td class="cell-meta data-table-id"><span class="cell-narrow">ID </span>{{ customer.id }}</td>
-                        <td>
+                        <td class="cell-meta data-table-id touch-table-phone-hidden text-center"><span class="cell-narrow">ID </span>{{ customer.id }}</td>
+                        <td class="touch-table-cut">
                             <a href="#" class="data-table-link" data-row-link-target="link"
                                data-action="click->customers#openModalAction"
                                data-url="{{ path('customers.get.customer', {'id': customer.id }) }}"
@@ -38,9 +42,9 @@
                                 </span>
                             </a>
                         </td>
-                        <td class="cell-meta">{{- companies|join(', ') -}}</td>
-                        <td class="cell-meta">{{- cities|join(', ') -}}</td>
-                        <td class="cell-meta text-end">
+                        <td class="cell-meta touch-table-cut">{{- companies|join(', ') -}}</td>
+                        <td class="cell-meta touch-table-cut touch-table-phone-hidden">{{- cities|join(', ') -}}</td>
+                        <td class="cell-meta text-center">
                             <span class="cell-wide">{{ bookings }}</span>
                             <span class="cell-narrow">{{ 'customer.list.bookings'|trans({'%count%': bookings}) }}</span>
                         </td>
@@ -61,7 +65,8 @@
     </div>
 {% endif %}
 <div class="data-footer">
-    <span>{{ 'customer.list.count'|trans({'%count%': total}) }}</span>
+    <span></span>
     <input id="page" type="hidden" name="page" value="{{ page }}" data-customers-target="page" />
     {% include 'paginator.html.twig' with { 'url' : path('customers.overview'), 'pagination_action': 'click->customers#paginateAction', 'swipe_nav': true } %}
+</div>
 </div>

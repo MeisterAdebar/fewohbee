@@ -9,6 +9,37 @@
     overflow: hidden;
 }
 
+/* A paged list (paged-list): the footer with its paging stays at the bottom of the screen,
+   above the bottom bar, while the rows scroll beneath it. The card does not clip: a card that
+   hides its overflow would hold the footer in place, and clipping would cut off the footer's
+   frame where it lies over the card's border. */
+.data-card:has(.paged-list),
+.paged-list .data-card {
+    overflow: visible;
+}
+
+/* The footer always looks like the end of the card, also while the rest of the card still
+   continues beneath it: it lies over the card's side and bottom border and draws the rounded
+   lower corners itself (::before), with the page background behind the corners. */
+.paged-list .data-footer {
+    position: sticky;
+    bottom: var(--feb-bottomnav-offset);
+    z-index: 2;
+    margin: 0 -1px -1px;
+    background-color: var(--feb-canvas);
+}
+
+.paged-list .data-footer::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border: 1px solid var(--feb-border);
+    border-top: 0;
+    border-radius: 0 0 var(--bs-card-border-radius) var(--bs-card-border-radius);
+    background-color: var(--feb-surface);
+}
+
 .data-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -23,11 +54,14 @@
     margin-left: auto;
 }
 
+/* Count at the left, paging in the middle: it stays below the middle of the list, and on touch
+   screens clear of the round add button at the right. Below sm the two go one under the other. */
 .data-footer {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    /* The count keeps its column at least as wide as itself, in one line; a long paging wraps
+       in the middle instead */
+    grid-template-columns: 1fr auto minmax(0, 1fr);
     align-items: center;
-    justify-content: space-between;
     gap: .5rem 1rem;
     padding: .75rem 1rem;
     border-top: 1px solid var(--feb-border);
@@ -35,10 +69,33 @@
     font-size: var(--feb-font-size-sm);
 }
 
+.data-footer > span {
+    white-space: nowrap;
+}
+
 .data-footer .pagination {
+    grid-column: 2;
     flex-wrap: wrap;
+    justify-content: center;
     row-gap: .25rem;
     margin: 0;
+}
+
+/* Below md the count and a paging with page numbers do not fit side by side: one above the other */
+@media (max-width: 767.98px) {
+    .data-footer {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+    }
+
+    .data-footer .pagination {
+        grid-column: 1;
+    }
+
+    /* The empty placeholder of a footer with paging only */
+    .data-footer > span:empty {
+        display: none;
+    }
 }
 
 .data-table {
@@ -178,6 +235,190 @@
 @media (min-width: 768px) {
     .data-table-stack .cell-narrow {
         display: none;
+    }
+}
+
+/*
+ * touch-table: on touch screens, at any width, a table of one line per row instead of blocks
+ * stacked by data-table-stack, so a screen holds many rows. Columns marked touch-table-cut
+ * share what the others leave (--touch-table-share, set by the template) and are cut short;
+ * max-width: 0 lets them shrink below their content, down to a width that still shows the
+ * start, e.g. an account number. Everything is in the details of the record.
+ */
+.touch-table .touch-table-short,
+.touch-table .touch-table-phone-only {
+    display: none;
+}
+
+@media not all and (hover: hover) and (pointer: fine) {
+    /* Undoes data-table-stack below md */
+    .data-table-stack.touch-table > thead {
+        position: static;
+        width: auto;
+        height: auto;
+        overflow: visible;
+        clip-path: none;
+    }
+
+    .data-table-stack.touch-table > tbody > tr {
+        display: table-row;
+        padding: 0;
+        border-bottom: 0;
+    }
+
+    .data-table-stack.touch-table > tbody > tr > td,
+    .data-table-stack.touch-table > tbody > tr > td:empty,
+    .data-table-stack.touch-table > tbody > tr > td.cell-wide {
+        display: table-cell;
+        padding: .25rem var(--touch-table-cell-padding-x);
+        border-style: solid;
+        border-color: var(--bs-table-border-color, var(--feb-border));
+        border-width: 0 0 var(--bs-border-width);
+        text-align: start !important;
+    }
+
+    .data-table-stack.touch-table > tbody > tr > td.text-end {
+        text-align: end !important;
+    }
+
+    .data-table-stack.touch-table > tbody > tr > td.text-center {
+        text-align: center !important;
+    }
+
+    .data-table-stack.touch-table > tbody > tr:last-child > td {
+        border-bottom-width: 0;
+    }
+
+    /* Not indented beside an avatar: there is none in a line */
+    .data-table-stack.touch-table > tbody > tr:has(.avatar) > .cell-meta {
+        padding-left: var(--touch-table-cell-padding-x);
+    }
+
+    .data-table-stack.touch-table span.cell-wide {
+        display: inline;
+    }
+
+    .data-table-stack.touch-table > tbody > tr > .cell-meta {
+        color: inherit;
+        font-size: inherit;
+    }
+
+    .data-table-stack.touch-table > tbody > tr > .cell-actions {
+        width: 1%;
+    }
+
+    .touch-table .cell-narrow,
+    .touch-table .avatar {
+        display: none;
+    }
+
+    /* One line per row */
+    .touch-table {
+        --touch-table-cell-padding-x: .75rem;
+    }
+
+    .touch-table > thead > tr > th,
+    .touch-table > tbody > tr > td {
+        padding: .25rem var(--touch-table-cell-padding-x);
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .touch-table > thead > tr > th {
+        padding-block: .5rem;
+    }
+
+    .touch-table > thead > tr > .data-table-id,
+    .touch-table > tbody > tr > .data-table-id {
+        padding-right: 0;
+    }
+
+    /* Status and its icons side by side, centred in the line */
+    .touch-table .invoice-state {
+        flex-wrap: nowrap;
+        vertical-align: middle;
+    }
+
+    /* Narrower and lower than elsewhere on touch screens, so a line holds them: guests and
+       invoices also open by a tap on the row */
+    .touch-table .btn-icon {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    /* E.g. the year of a journal entry: the month is in the heading */
+    .touch-table .touch-table-touch-hidden {
+        display: none;
+    }
+
+    /* Child selectors: they outweigh a page's own minimum width, e.g. the journal's accounts */
+    .touch-table > thead > tr > .touch-table-cut,
+    .touch-table > tbody > tr > .touch-table-cut {
+        max-width: 0;
+        min-width: 3.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* The other columns as narrow as their content, so the cut ones share the rest */
+    .touch-table > thead > tr > th {
+        width: 1%;
+    }
+
+    .touch-table > thead > tr > th.touch-table-cut {
+        width: var(--touch-table-share, auto);
+    }
+
+    .touch-table .touch-table-cut .data-table-link,
+    .touch-table .touch-table-cut .data-table-link-text {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        overflow-wrap: normal;
+    }
+
+    /* A long heading such as "Rechnungsdatum" would widen a column of short values */
+    .touch-table .touch-table-long {
+        display: none;
+    }
+
+    .touch-table .touch-table-short {
+        display: inline;
+    }
+}
+
+/* Below lg (a tablet upright): what is marked touch-table-narrow-hidden gives way, e.g. the
+   journal's tax rate and invoice number */
+@media (not ((hover: hover) and (pointer: fine))) and ((max-width: 991.98px) or (max-height: 500px)) {
+    .touch-table .touch-table-narrow-hidden,
+    .data-table-stack.touch-table > tbody > tr > td.touch-table-narrow-hidden {
+        display: none;
+    }
+}
+
+/* Phones, narrow upright or low sideways: what is marked touch-table-phone-hidden gives way (a
+   column, a year, an icon, an account's name); all of it shows in the details */
+@media (not ((hover: hover) and (pointer: fine))) and ((max-width: 575.98px) or (max-height: 500px)) {
+    .touch-table .touch-table-phone-hidden,
+    .data-table-stack.touch-table > tbody > tr > td.touch-table-phone-hidden {
+        display: none;
+    }
+
+    .touch-table > thead > tr > .touch-table-cut,
+    .touch-table > tbody > tr > .touch-table-cut {
+        min-width: 2.5rem;
+    }
+
+    .touch-table .touch-table-phone-only {
+        display: inline;
+    }
+
+    .touch-table .btn-icon {
+        width: 1.75rem;
+    }
+
+    .touch-table {
+        --touch-table-cell-padding-x: .5rem;
     }
 }
 
