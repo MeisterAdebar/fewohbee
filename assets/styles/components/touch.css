@@ -36,26 +36,21 @@
         padding-bottom: 0;
     }
 
-    /* The round button sits in the middle of the footer: the footer takes a fixed height and
-       the button keeps half the rest of it below itself (--feb-fab-gap, 1rem elsewhere) */
+    /* The gap below the round button, on every page alike */
+    :root {
+        --feb-fab-gap: .5rem;
+    }
+
+    /* The round button sits in the middle of the footer without moving from where it stands on
+       every other page: the footer is as high as the button with its gap above and below */
     body:has(.paged-list) {
-        --feb-paged-footer-height: 4.5rem;
-        --feb-fab-gap: calc((var(--feb-paged-footer-height) - 3.5rem) / 2);
+        --feb-paged-footer-height: calc(3.5rem + 2 * var(--feb-fab-gap, 1rem));
     }
 
     .paged-list .data-footer {
         min-height: var(--feb-paged-footer-height);
         align-content: center;
         padding-inline: 4.5rem;
-    }
-
-    /* A compact paging (paginator.html.twig): one line next to the round button */
-    .paged-list .page-item-full {
-        display: none;
-    }
-
-    .paged-list .page-item-compact {
-        display: block;
     }
 }
 
@@ -88,25 +83,6 @@
 @media (not ((hover: hover) and (pointer: fine))) and (max-width: 991.98px) {
     .container:has(.paged-list) {
         max-width: none;
-    }
-}
-
-/* Only where a paged list on a touch screen asks for it, see above */
-.page-item-compact {
-    display: none;
-}
-
-/* Phones: smaller page numbers, kept left of the round add button rather than centred, so
-   they fit in one line where the screen allows */
-@media (not ((hover: hover) and (pointer: fine))) and (max-width: 575.98px) {
-    .paged-list .data-footer {
-        padding-inline: .5rem 4rem;
-    }
-
-    .paged-list .data-footer .pagination {
-        --bs-pagination-padding-x: .45rem;
-        --bs-pagination-padding-y: .3rem;
-        --bs-pagination-font-size: .875rem;
     }
 }
 

@@ -92,6 +92,14 @@
         width: 2.75rem;
         height: 2.75rem;
     }
+
+    /* Beside fields and buttons (38px) an icon button keeps its touch size but reaches into the
+       space above and below, so a toolbar is as high with icons as without */
+    .data-toolbar > .btn-icon,
+    .page-toolbar-tools > .btn-icon,
+    .page-actions > .btn-icon {
+        margin-block: calc((1.5rem + .75rem + 2 * var(--bs-border-width) - 2.75rem) / 2);
+    }
 }
 
 /* Shown in place of a list that has no entries */
@@ -237,6 +245,48 @@ details[open] > summary > .fhb-details-chevron {
 
     .page-toolbar-tools > .form-select {
         min-width: 0;
+    }
+}
+
+/* ------------------------------------------------------------------ Paging a list */
+
+/* The pages of a list (paginator.html.twig): below md, where lists stack, only the arrows with
+   the position between them ("3 / 15"), so the row never wraps beside the count; the arrows as
+   large as a fingertip. A swipe still pages through the arrows. So also on a tablet held upright,
+   where the page numbers of a long list wrap beside the round add button. */
+.pagination-compact > .page-item-position {
+    display: none;
+}
+
+@media (max-width: 767.98px), (not ((hover: hover) and (pointer: fine))) and (max-width: 991.98px) {
+    .pagination.pagination-compact {
+        flex-wrap: nowrap;
+    }
+
+    .pagination-compact > .page-item {
+        display: none;
+    }
+
+    .pagination-compact > .page-item:first-child,
+    .pagination-compact > .page-item:last-child,
+    .pagination-compact > .page-item-position {
+        display: block;
+    }
+
+    .pagination-compact > .page-item > .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    /* Information, not a button */
+    .pagination-compact > .page-item-position > .page-link {
+        min-width: 4.5rem;
+        pointer-events: none;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
     }
 }
 

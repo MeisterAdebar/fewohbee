@@ -44,6 +44,14 @@
     color: var(--feb-text);
 }
 
+/* From md the count follows the balances, which already stand at the right */
+@media (min-width: 768px) {
+    .data-toolbar:has(.journal-balances) > .data-toolbar-count {
+        order: 1;
+        margin-left: 0;
+    }
+}
+
 /* Phones: an entry is a block - the amount first, then date and document, the accounts and the
    details beneath (see data-table-stack) */
 @media (max-width: 767.98px) {

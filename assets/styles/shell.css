@@ -420,7 +420,7 @@
 /* ------------------------------------------------------------------ Scrolling the navigation away */
 
 /* Touch screens below lg: scrolling down slides the bars at the top and at the bottom away
-   (hide_nav_controller.js); from lg up it collapses the sidebar to its rail. They slide rather
+   (hide_nav_controller.js); from lg up the sidebar stays as it is. They slide rather
    than leave the layout, so the page does not jump while it scrolls; only the room kept for the
    bottom bar at the end of the page goes with it. What stands on the bottom
    bar (the footer of a paged list, the round add button) moves down with it. */

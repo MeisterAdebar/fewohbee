@@ -109,6 +109,11 @@
                 <option value="cashbook"{% if filter == 'cashbook' %} selected{% endif %}>{{ 'accounting.journal.filter.cashbook'|trans }}</option>
                 <option value="bankbook"{% if filter == 'bankbook' %} selected{% endif %}>{{ 'accounting.journal.filter.bankbook'|trans }}</option>
             </select>
+            {# The count of the whole month (within the chosen book and search), at the top like the
+               count in the search field of guests and invoices: the footer keeps one line beside the
+               round add button. Beside the select, so on phones it keeps their line
+               while the balances wrap below; from md it moves behind them (booking-journal.css) #}
+            <span class="data-toolbar-count">{{ 'accounting.journal.batch.entries.count'|trans({'%count%': entries|length}) }}</span>
             {% if book %}
                 <div class="journal-balances">
                     {% if book == 'bankbook' %}
@@ -216,12 +221,10 @@
             </table>
         </div>
         {% endif %}
-        {% if pages > 1 %}
-            <div class="data-footer">
-                <span></span>
-                {% include 'paginator.html.twig' with { 'url': path('journal.batch.entries', {'id': batch.id, 'filter': filter}), 'search': search } %}
-            </div>
-        {% endif %}
+        <div class="data-footer">
+            <span></span>
+            {% include 'paginator.html.twig' with { 'url': path('journal.batch.entries', {'id': batch.id, 'filter': filter}), 'search': search } %}
+        </div>
     </div>
     </div>
 

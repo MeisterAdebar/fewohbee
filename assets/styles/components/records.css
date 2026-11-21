@@ -54,13 +54,22 @@
     margin-left: auto;
 }
 
-/* Count at the left, paging in the middle: it stays below the middle of the list, and on touch
-   screens clear of the round add button at the right. Below sm the two go one under the other. */
+/* The number of records at the right end of a toolbar, small and bold like the count in a search
+   field (controls.css) */
+.data-toolbar-count {
+    margin-left: auto;
+    color: var(--feb-text-muted);
+    font-size: var(--feb-font-size-sm);
+    font-weight: var(--feb-font-weight-strong);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* Count and pages of a list, the pages always in the middle: below md the count above them (a
+   phone has no room for the count beside pages in the middle), from md the count at the left */
 .data-footer {
-    display: grid;
-    /* The count keeps its column at least as wide as itself, in one line; a long paging wraps
-       in the middle instead */
-    grid-template-columns: 1fr auto minmax(0, 1fr);
+    display: flex;
+    flex-direction: column;
     align-items: center;
     gap: .5rem 1rem;
     padding: .75rem 1rem;
@@ -69,32 +78,25 @@
     font-size: var(--feb-font-size-sm);
 }
 
-.data-footer > span {
-    white-space: nowrap;
+/* A footer without a count keeps an empty placeholder */
+.data-footer > :empty {
+    display: none;
 }
 
 .data-footer .pagination {
-    grid-column: 2;
     flex-wrap: wrap;
-    justify-content: center;
     row-gap: .25rem;
     margin: 0;
 }
 
-/* Below md the count and a paging with page numbers do not fit side by side: one above the other */
-@media (max-width: 767.98px) {
+@media (min-width: 768px) {
     .data-footer {
-        grid-template-columns: minmax(0, 1fr);
-        justify-items: center;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
     }
 
-    .data-footer .pagination {
-        grid-column: 1;
-    }
-
-    /* The empty placeholder of a footer with paging only */
-    .data-footer > span:empty {
-        display: none;
+    .data-footer > .pagination {
+        grid-column: 2;
     }
 }
 
@@ -239,8 +241,9 @@
 }
 
 /*
- * touch-table: on touch screens, at any width, a table of one line per row instead of blocks
- * stacked by data-table-stack, so a screen holds many rows. Columns marked touch-table-cut
+ * touch-table: on touch screens from sm up (tablets, phones held sideways), a table of one line
+ * per row instead of blocks stacked by data-table-stack, so a screen holds many rows. A phone
+ * held upright keeps the stacked blocks: a line there is too narrow for the columns. Columns marked touch-table-cut
  * share what the others leave (--touch-table-share, set by the template) and are cut short;
  * max-width: 0 lets them shrink below their content, down to a width that still shows the
  * start, e.g. an account number. Everything is in the details of the record.
@@ -250,7 +253,7 @@
     display: none;
 }
 
-@media not all and (hover: hover) and (pointer: fine) {
+@media (not ((hover: hover) and (pointer: fine))) and (min-width: 576px) {
     /* Undoes data-table-stack below md */
     .data-table-stack.touch-table > thead {
         position: static;
@@ -389,16 +392,16 @@
 
 /* Below lg (a tablet upright): what is marked touch-table-narrow-hidden gives way, e.g. the
    journal's tax rate and invoice number */
-@media (not ((hover: hover) and (pointer: fine))) and ((max-width: 991.98px) or (max-height: 500px)) {
+@media (not ((hover: hover) and (pointer: fine))) and (min-width: 576px) and ((max-width: 991.98px) or (max-height: 500px)) {
     .touch-table .touch-table-narrow-hidden,
     .data-table-stack.touch-table > tbody > tr > td.touch-table-narrow-hidden {
         display: none;
     }
 }
 
-/* Phones, narrow upright or low sideways: what is marked touch-table-phone-hidden gives way (a
-   column, a year, an icon, an account's name); all of it shows in the details */
-@media (not ((hover: hover) and (pointer: fine))) and ((max-width: 575.98px) or (max-height: 500px)) {
+/* Phones held sideways: what is marked touch-table-phone-hidden gives way (a column, a year, an
+   icon, an account's name); all of it shows in the details */
+@media (not ((hover: hover) and (pointer: fine))) and (min-width: 576px) and (max-height: 500px) {
     .touch-table .touch-table-phone-hidden,
     .data-table-stack.touch-table > tbody > tr > td.touch-table-phone-hidden {
         display: none;

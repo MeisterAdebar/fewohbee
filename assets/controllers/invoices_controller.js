@@ -604,7 +604,10 @@ export default class extends Controller {
             target: table,
             loader: false,
             onSuccess: (html) => {
+                // The tooltips of the status icons go with the rows they belong to
+                disposeTooltips(table);
                 table.innerHTML = html;
+                enableTooltips(table);
                 updateSearchCount(table, document.getElementById('search'));
             },
         });

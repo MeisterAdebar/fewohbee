@@ -17,11 +17,7 @@
                 <th class="text-center"><span class="touch-table-long">{{ 'invoice.date'|trans }}</span><span class="touch-table-short">{{ 'invoice.date.short'|trans }}</span></th>
                 <th class="touch-table-cut" style="--touch-table-share: 55%">{{ 'invoice.list.name'|trans }}</th>
                 <th class="touch-table-cut" style="--touch-table-share: 45%">{{ 'invoice.company'|trans }}</th>
-                <th class="text-center">
-                    {# Phones: an icon instead of the word, so the names keep their room #}
-                    <span class="touch-table-phone-hidden">{{ 'invoice.status'|trans }}</span>
-                    <span class="touch-table-phone-only" role="img" title="{{ 'invoice.status'|trans }}" aria-label="{{ 'invoice.status'|trans }}"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
-                </th>
+                <th class="text-center">{{ 'invoice.status'|trans }}</th>
                 <th class="data-table-actions"><span class="visually-hidden">{{ 'invoice.action'|trans }}</span></th>
             </tr>
             </thead>
@@ -50,31 +46,29 @@
                     <td class="cell-meta text-center">
                         <span class="invoice-state">
                             <span class="cell-narrow">{{ invoice.date|date('d.m.Y') }}</span>
-                            {# The status is the colour of an icon, the word in its title: the icon of
-                               the way of payment, or one of its own without one #}
-                            {% set status = {
-                                1: ['invoice.status.unpaid', 'text-warning', 'fa-hourglass-half'],
-                                2: ['invoice.status.paid', 'text-success', 'fa-circle-check'],
-                                3: ['invoice.status.prepaid', 'text-info', 'fa-circle-check']
-                            }[invoice.status] ?? ['invoice.status.canceled', 'text-body-secondary', 'fa-ban'] %}
-                            {% if invoice.paymentMeans %}
-                                {% set paymentMeansIcon = {
-                                    'CASH': 'fa-coins',
-                                    'CREDIT_TRANSFER': 'fa-building-columns',
-                                    'CARD_PAYMENT': 'fa-credit-card',
-                                    'SEPA_CREDIT_TRANSFER': 'fa-building-columns',
-                                    'SEPA_DIRECT_DEBIT': 'fa-money-check'
-                                }[invoice.paymentMeans.name]|default('fa-circle-question') %}
-                                {% set statusLabel = status[0]|trans ~ ' · ' ~ invoice.paymentMeans.name|trans %}
-                                <span class="{{ status[1] }}" role="img" title="{{ statusLabel }}" aria-label="{{ statusLabel }}">
-                                    <i class="fa-solid {{ paymentMeansIcon }}" aria-hidden="true"></i>
-                                </span>
-                            {% else %}
-                                <span class="{{ status[1] }}" role="img" title="{{ status[0]|trans }}" aria-label="{{ status[0]|trans }}">
-                                    <i class="fa-solid {{ status[2] }}" aria-hidden="true"></i>
-                                </span>
-                            {% endif %}
-                            {# Per invoice, not list-wide: with per-branch issuers the profile can differ. #}
+                            <twig:InvoiceStatus :status="invoice.status"/>
+                            {# The way of payment; on phones held sideways in the colour of the status
+                               instead of the badge (invoices.css), a receipt where none is set. Its
+                               tooltip names both. #}
+                            {% set statusKey = {1: 'unpaid', 2: 'paid', 3: 'prepaid'}[invoice.status] ?? 'canceled' %}
+                            {% set paymentMeansIcon = invoice.paymentMeans ? ({
+                                'CASH': 'fa-coins',
+                                'CREDIT_TRANSFER': 'fa-building-columns',
+                                'CARD_PAYMENT': 'fa-credit-card',
+                                'SEPA_CREDIT_TRANSFER': 'fa-building-columns',
+                                'SEPA_DIRECT_DEBIT': 'fa-money-check'
+                            }[invoice.paymentMeans.name]|default('fa-circle-question')) : 'fa-receipt' %}
+                            {% set paymentLabel = invoice.paymentMeans
+                                ? invoice.paymentMeans.name|trans ~ ' · ' ~ ('invoice.status.' ~ statusKey)|trans
+                                : ('invoice.status.' ~ statusKey)|trans %}
+                            <span class="invoice-state-means invoice-state-{{ statusKey }}{% if not invoice.paymentMeans %} invoice-state-means-none{% endif %}"
+                                  role="img" data-bs-toggle="tooltip" data-row-link-ignore
+                                  title="{{ paymentLabel }}" aria-label="{{ paymentLabel }}">
+                                <i class="fa-solid {{ paymentMeansIcon }}" aria-hidden="true"></i>
+                            </span>
+                            {# Per invoice, not list-wide: with per-branch issuers the profile can differ.
+                               The icons explain themselves in a tooltip, on touch screens with a tap:
+                               a tap on them does not open the invoice (data-row-link-ignore). #}
                             {% if readiness and readiness.configured %}
                                 {% if readiness.ready %}
                                     {% set einvoice = {class: 'text-success-emphasis', icon: 'circle-check', text: 'invoice.einvoice.status.ready'|trans} %}
@@ -87,7 +81,8 @@
                                         text: 'invoice.einvoice.status.missing'|trans ~ ':' ~ "\n" ~ readiness.result.messageKeys|map(key => key|trans)|join("\n"),
                                     } %}
                                 {% endif %}
-                                <span class="{{ einvoice.class }} touch-table-phone-hidden" role="img" title="{{ einvoice.text }}" aria-label="{{ einvoice.text }}">
+                                <span class="invoice-state-einvoice {{ einvoice.class }}" role="img"
+                                      data-bs-toggle="tooltip" data-bs-custom-class="invoice-state-tooltip" data-row-link-ignore title="{{ einvoice.text }}" aria-label="{{ einvoice.text }}">
                                     <i class="fa-solid fa-{{ einvoice.icon }}" aria-hidden="true"></i>
                                 </span>
                             {% endif %}

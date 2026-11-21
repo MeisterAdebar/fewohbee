@@ -18,6 +18,108 @@ details.einvoice-readiness > summary::-webkit-details-marker {
     gap: .25rem .5rem;
 }
 
+/* In the table (from md, on touch screens from sm): the icons in columns of their own, alike in
+   every row also where one is missing, the status centred in the room before them */
+@media (min-width: 768px), (not ((hover: hover) and (pointer: fine))) and (min-width: 576px) {
+    .invoice-table .invoice-state {
+        display: grid;
+        grid-template-columns: 1fr 1.25rem 1.25rem;
+        justify-items: center;
+        column-gap: .5rem;
+    }
+
+    .invoice-table .invoice-state > .invoice-status {
+        grid-column: 1;
+    }
+
+    .invoice-table .invoice-state > .invoice-state-means {
+        grid-column: 2;
+    }
+
+    .invoice-table .invoice-state > .invoice-state-einvoice {
+        grid-column: 3;
+    }
+}
+
+/* Stacked rows (below md): every badge as wide as the widest German one, its word centred, so
+   the icons after it stand alike in every row */
+@media (max-width: 767.98px) {
+    .invoice-state > .invoice-status {
+        min-width: 6em;
+        text-align: center;
+    }
+}
+
+/* The way of payment beside the badge, muted; a receipt for none only shows on phones */
+.invoice-state-means {
+    color: var(--bs-secondary-color);
+}
+
+.invoice-state-means-none {
+    display: none;
+}
+
+/* Phones held sideways: the way of payment in the colour of the status takes the place of the
+   badge (its tooltip names the status), so the names keep their room in the one line. Upright
+   the rows stack and keep the badge. */
+@media (not ((hover: hover) and (pointer: fine))) and (min-width: 576px) and (max-height: 500px) {
+    .invoice-state > .invoice-status {
+        display: none;
+    }
+
+    .invoice-state-means-none {
+        display: inline;
+    }
+
+    .invoice-state-unpaid {
+        color: var(--feb-warning-text);
+    }
+
+    .invoice-state-paid {
+        color: var(--feb-success-text);
+    }
+
+    .invoice-state-prepaid {
+        color: var(--feb-info-text);
+    }
+
+    .invoice-table .invoice-state {
+        grid-template-columns: 1.25rem 1.25rem;
+    }
+
+    .invoice-table .invoice-state > .invoice-state-means {
+        grid-column: 1;
+    }
+
+    .invoice-table .invoice-state > .invoice-state-einvoice {
+        grid-column: 2;
+    }
+}
+
+/* The e-invoice tooltip lists what is missing, one line each */
+.invoice-state-tooltip {
+    --bs-tooltip-max-width: 18rem;
+}
+
+.invoice-state-tooltip .tooltip-inner {
+    white-space: pre-line;
+    text-align: start;
+}
+
+/* A status icon is small for a finger: its tap area reaches a little beyond it, so a tap
+   meant for its tooltip does not open the invoice */
+@media not all and (hover: hover) and (pointer: fine) {
+    .invoice-state [data-bs-toggle="tooltip"] {
+        position: relative;
+    }
+
+    .invoice-state [data-bs-toggle="tooltip"]::after {
+        content: "";
+        position: absolute;
+        inset: -.5rem -.25rem;
+    }
+}
+
 .invoice-table .data-table-link-text {
     font-variant-numeric: tabular-nums;
 }
