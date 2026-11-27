@@ -150,3 +150,6 @@ nav.sidebar.toggle: 'Seitenleiste ein- oder ausklappen'
 nav.short.reservations: Belegung
 nav.short.frontdesk: Rezeption
 nav.short.invoices: Rechnungen
+nav.short.journal: FiBu
+nav.short.housekeeping: Reinigung
+nav.short.settings: Setup

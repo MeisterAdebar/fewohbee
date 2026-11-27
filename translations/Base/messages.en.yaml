@@ -152,3 +152,6 @@ nav.sidebar.toggle: 'Collapse or expand sidebar'
 nav.short.reservations: Bookings
 nav.short.frontdesk: 'Front desk'
 nav.short.invoices: Invoices
+nav.short.journal: Ledger
+nav.short.housekeeping: Housekeeping
+nav.short.settings: Settings

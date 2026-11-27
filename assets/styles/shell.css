@@ -214,12 +214,240 @@
     inset: auto 0 0;
     z-index: 1030;
     display: grid;
-    grid-auto-columns: minmax(0, 1fr);
-    grid-auto-flow: column;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
     height: calc(var(--feb-bottomnav-height) + env(safe-area-inset-bottom));
     padding: 0 .25rem env(safe-area-inset-bottom);
+    /* The rows slide sideways out of the bar; the menu of a group still opens above it */
+    overflow-x: clip;
     background-color: var(--feb-surface);
     border-top: 1px solid var(--feb-border);
+}
+
+/* Half transparent: the page scrolling beneath shows through, only lightly blurred, so its text
+   can nearly be read. Only where the browser can blur; elsewhere the bar stays solid, so its
+   labels stay readable over the page. */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .app-bottomnav {
+        background-color: rgba(var(--feb-surface-rgb), .3);
+        -webkit-backdrop-filter: blur(2px) saturate(160%);
+        backdrop-filter: blur(2px) saturate(160%);
+    }
+}
+
+/* Two rows in the same place: the tabs, and behind "More" every other entry
+   (bottomnav_controller.js). "More" pushes the tabs out to the left and the other entries in from
+   the right, "Back" the other way round. A row out of sight is hidden, so it takes no taps and
+   no focus; it turns hidden only once it has slid away. */
+.app-bottomnav-page {
+    display: grid;
+    grid-area: 1 / 1;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    transition: transform .25s ease, visibility 0s;
+}
+
+.app-bottomnav-page-more,
+.app-bottomnav-more .app-bottomnav-page-tabs {
+    visibility: hidden;
+    transition: transform .25s ease, visibility 0s .25s;
+}
+
+.app-bottomnav-page-more {
+    transform: translateX(100%);
+}
+
+.app-bottomnav-more .app-bottomnav-page-tabs {
+    transform: translateX(-100%);
+}
+
+.app-bottomnav-more .app-bottomnav-page-more {
+    visibility: visible;
+    transform: none;
+    transition: transform .25s ease, visibility 0s;
+}
+
+/* An open group menu lies above the round add button (same level, but later on the page) */
+.app-bottomnav:has(.dropdown-menu.show) {
+    z-index: 1035;
+}
+
+/* Opening a page on the second row shows it straight away, without sliding */
+.app-bottomnav-instant .app-bottomnav-page {
+    transition: none;
+}
+
+/* As many entries stand in the first row as fit, each place at least 70px wide (five on a phone
+   of 360px), the rest on the second row. An entry marked from-N needs N places in the bar
+   (_app_nav.html.twig), which the bar has from 70px * N plus its padding (8px) on: below that it
+   leaves the first row, and until-N shows it on the second. "More" is marked until-N with the
+   number of all entries: it is needed while they do not all fit. Below lg the bar has at most 14
+   places; an entry needing more stays on the second row. */
+@media (max-width: 147.98px) {
+    .app-bottomnav-from-2 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 148px) {
+    .app-bottomnav-until-2 {
+        display: none !important;
+    }
+}
+
+@media (max-width: 217.98px) {
+    .app-bottomnav-from-3 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 218px) {
+    .app-bottomnav-until-3 {
+        display: none !important;
+    }
+}
+
+@media (max-width: 287.98px) {
+    .app-bottomnav-from-4 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 288px) {
+    .app-bottomnav-until-4 {
+        display: none !important;
+    }
+}
+
+@media (max-width: 357.98px) {
+    .app-bottomnav-from-5 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 358px) {
+    .app-bottomnav-until-5 {
+        display: none !important;
+    }
+}
+
+@media (max-width: 427.98px) {
+    .app-bottomnav-from-6 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 428px) {
+    .app-bottomnav-until-6 {
+        display: none !important;
+    }
+}
+
+@media (max-width: 497.98px) {
+    .app-bottomnav-from-7 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 498px) {
+    .app-bottomnav-until-7 {
+        display: none !important;
+    }
+}
+
+@media (max-width: 567.98px) {
+    .app-bottomnav-from-8 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 568px) {
+    .app-bottomnav-until-8 {
+        display: none !important;
+    }
+}
+
+@media (max-width: 637.98px) {
+    .app-bottomnav-from-9 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 638px) {
+    .app-bottomnav-until-9 {
+        display: none !important;
+    }
+}
+
+@media (max-width: 707.98px) {
+    .app-bottomnav-from-10 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 708px) {
+    .app-bottomnav-until-10 {
+        display: none !important;
+    }
+}
+
+@media (max-width: 777.98px) {
+    .app-bottomnav-from-11 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 778px) {
+    .app-bottomnav-until-11 {
+        display: none !important;
+    }
+}
+
+@media (max-width: 847.98px) {
+    .app-bottomnav-from-12 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 848px) {
+    .app-bottomnav-until-12 {
+        display: none !important;
+    }
+}
+
+@media (max-width: 917.98px) {
+    .app-bottomnav-from-13 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 918px) {
+    .app-bottomnav-until-13 {
+        display: none !important;
+    }
+}
+
+@media (max-width: 987.98px) {
+    .app-bottomnav-from-14 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 988px) {
+    .app-bottomnav-until-14 {
+        display: none !important;
+    }
+}
+
+@media (max-width: 1057.98px) {
+    .app-bottomnav-from-15 {
+        display: none !important;
+    }
+}
+
+@media (min-width: 1058px) {
+    .app-bottomnav-until-15 {
+        display: none !important;
+    }
 }
 
 .app-bottomnav-item {
@@ -417,16 +645,6 @@
     }
 }
 
-/* Below lg the side menu and its backdrop (Bootstrap puts it beside the menu) sit inside the top
-   bar, whose level (sticky, 1020) would keep them below the bottom bar and the round add button
-   (1030): those stayed bright and could be tapped. While the menu is open the top bar rises above
-   them. */
-@media (max-width: 991.98px) {
-    .app-nav:has(> .app-nav-menu.show, > .app-nav-menu.showing) {
-        z-index: 1045;
-    }
-}
-
 /* ------------------------------------------------------------------ Bars that scroll away */
 
 /* Touch screens below lg: scrolling down slides the top and the bottom bar away, at the top of
@@ -464,6 +682,7 @@
 @media (max-width: 991.98px) and (prefers-reduced-motion: reduce) {
     .app-nav,
     .app-bottomnav,
+    .app-bottomnav .app-bottomnav-page,
     .fab-add,
     .fab-add-dropdown {
         transition: none;

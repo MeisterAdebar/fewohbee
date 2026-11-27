@@ -4,8 +4,9 @@
 
     The entries are described once as data: `prefixes` are the route-name prefixes that mark an
     entry as current, `paths` URL paths that do the same for everything below them, `tab` is the
-    short label of an entry that also appears in the bottom bar, `children` turns an entry into a
-    group. Expects `pageTitle` (may be empty; the label of the current entry is used then).
+    short label of an entry the bottom bar shows first, `short` the short label of every other
+    entry there, `children` turns an entry into a group. Expects
+    `pageTitle` (may be empty; the label of the current entry is used then).
 #}
 {% set route = getActiveRouteName() %}
 {% set requestPath = app.request.pathInfo %}
@@ -22,8 +23,8 @@
         id: 'operations', label: 'nav.operations'|trans, icon: 'fa-concierge-bell', prefixes: ['operations.'], open: true,
         children: [
             { label: 'nav.operations.frontdesk'|trans, tab: 'nav.short.frontdesk'|trans, icon: 'fa-concierge-bell', href: path('operations.frontdesk'), prefixes: ['operations.frontdesk'] },
-            { label: 'nav.housekeeping'|trans, href: path('operations.housekeeping'), prefixes: ['operations.housekeeping'] },
-            { label: 'nav.operations.reports'|trans, href: path('operations.reports'), prefixes: ['operations.reports'] },
+            { label: 'nav.housekeeping'|trans, short: 'nav.short.housekeeping'|trans, icon: 'fa-broom', href: path('operations.housekeeping'), prefixes: ['operations.housekeeping'] },
+            { label: 'nav.operations.reports'|trans, short: 'nav.operations.reports'|trans, icon: 'fa-clipboard-list', href: path('operations.reports'), prefixes: ['operations.reports'] },
         ],
     }]) %}
 {% endif %}
@@ -41,19 +42,19 @@
 {% endif %}
 {% if is_granted('ROLE_REGISTRATIONBOOK') %}
     {% set items = items|merge([{
-        label: 'nav.registrationbook'|trans, icon: 'fa-book',
+        label: 'nav.registrationbook'|trans, short: 'nav.registrationbook'|trans, icon: 'fa-book',
         href: path('registrationbook.overview'), prefixes: ['registrationbook'],
     }]) %}
 {% endif %}
 {% if is_granted('ROLE_CASHJOURNAL') %}
     {% set items = items|merge([{
-        label: 'nav.journal'|trans, icon: 'fa-book-open',
+        label: 'nav.journal'|trans, tab: 'nav.short.journal'|trans, icon: 'fa-book-open',
         href: path('journal.overview'), prefixes: ['journal'],
     }]) %}
 {% endif %}
 {% if is_granted('ROLE_STATISTICS') %}
     {% set items = items|merge([{
-        id: 'statistics', label: 'nav.statistics'|trans, icon: 'fa-chart-bar', prefixes: ['statistics'],
+        id: 'statistics', label: 'nav.statistics'|trans, short: 'nav.statistics'|trans, icon: 'fa-chart-bar', prefixes: ['statistics'],
         children: [
             { label: 'nav.utilization'|trans, href: path('statistics.utilization'), prefixes: ['statistics.utilization'] },
             { label: 'nav.origin'|trans, href: path('statistics.origin'), prefixes: ['statistics.origin'] },
@@ -66,13 +67,12 @@
     {# The settings pages are listed on the overview (Settings/index.html.twig); each names
        itself in the top bar with its page_title block #}
     {% set items = items|merge([{
-        label: 'nav.settings'|trans, icon: 'fa-gear', href: path('settings.overview'), prefixes: [], paths: ['/settings'],
+        label: 'nav.settings'|trans, short: 'nav.short.settings'|trans, icon: 'fa-gear', href: path('settings.overview'), prefixes: [], paths: ['/settings'],
     }]) %}
 {% endif %}
 
-{# Mark the current entries, collect the bottom bar's tabs and find the title of the page #}
+{# Mark the current entries and find the title of the page #}
 {% set marked = [] %}
-{% set tabs = [] %}
 {% set currentLabel = '' %}
 {% for item in items %}
     {% set children = [] %}
@@ -88,7 +88,6 @@
         {% endif %}
         {% set child = child|merge({ active: active }) %}
         {% set children = children|merge([child]) %}
-        {% if child.tab is defined %}{% set tabs = tabs|merge([child]) %}{% endif %}
     {% endfor %}
     {% set active = childActive %}
     {% for prefix in item.prefixes %}
@@ -100,9 +99,35 @@
     {% if active and not childActive %}{% set currentLabel = item.label %}{% endif %}
     {% set item = item|merge({ active: active, children: children }) %}
     {% set marked = marked|merge([item]) %}
-    {% if item.tab is defined %}{% set tabs = tabs|merge([item]) %}{% endif %}
 {% endfor %}
 {% set title = pageTitle|default('')|trim ?: currentLabel %}
+
+{# The bottom bar shows as many entries as fit side by side; the rest stands on a second row
+   behind "More". The entries with a `tab` label come first, then every other entry in the order of the menu. A
+   group whose entries are no tabs (statistics) is one entry that opens them upwards; the other
+   entries of a group with a tab (housekeeping and reports beside the front desk) stand on their
+   own. `fit` is the number of places the bar needs for an entry to stand in the first row: its
+   own position, plus one for "More" unless it is the last entry (shell.css turns that into
+   screen widths). #}
+{% set barTabs = [] %}
+{% set barRest = [] %}
+{% for item in marked %}
+    {% set entries = item.children is not empty and item.children|filter(child => child.tab is defined) is not empty
+        ? item.children
+        : [item] %}
+    {% for entry in entries %}
+        {% if entry.tab is defined %}
+            {% set barTabs = barTabs|merge([entry|merge({ short: entry.tab })]) %}
+        {% else %}
+            {% set barRest = barRest|merge([entry]) %}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+{% set barEntries = [] %}
+{% set barCount = (barTabs|length) + (barRest|length) %}
+{% for entry in barTabs|merge(barRest) %}
+    {% set barEntries = barEntries|merge([entry|merge({ fit: min(barCount, loop.index + 1) })]) %}
+{% endfor %}
 {% set notifications = notification_summary() %}
 
 <nav class="app-nav" aria-label="{{ 'nav.menu'|trans }}" data-controller="app-shell">
@@ -118,7 +143,8 @@
         </button>
     </div>
 
-    {# A side menu below lg (opened by "More" in the bottom bar), the sidebar's list from lg up #}
+    {# The sidebar's list from lg up; below lg the bottom bar leads to every entry (its "More"
+       row), so the menu is not opened there #}
     <div class="offcanvas-lg offcanvas-end app-nav-menu" tabindex="-1" id="appNavMenu"
          data-controller="main-nav" aria-labelledby="appNavMenuLabel">
         <div class="offcanvas-header">
@@ -205,16 +231,56 @@
     </div>
 </nav>
 
-<nav class="app-bottomnav" aria-label="{{ 'nav.menu'|trans }}">
-    {% for tab in tabs|slice(0, 4) %}
-        <a class="app-bottomnav-item{{ tab.active ? ' active' }}" href="{{ tab.href }}"{% if tab.active %} aria-current="page"{% endif %}>
-            <span class="app-bottomnav-icon"><i class="fas {{ tab.icon }}"></i></span>
-            <span class="app-bottomnav-label">{{ tab.tab }}</span>
+{% macro bottomnav_entry(entry, fitClass) %}
+    {% set itemClass = 'app-bottomnav-item ' ~ fitClass ~ (entry.active ? ' active') %}
+    {% if entry.children|default([]) is not empty %}
+        <div class="dropup app-bottomnav-group {{ fitClass }}">
+            <button type="button" class="app-bottomnav-item w-100 h-100{{ entry.active ? ' active' }}" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="app-bottomnav-icon"><i class="fas {{ entry.icon }}"></i></span>
+                <span class="app-bottomnav-label">{{ entry.short }}</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                {% for child in entry.children %}
+                    <li>
+                        <a class="dropdown-item{{ child.active ? ' active' }}" href="{{ child.href }}"
+                           {%- if child.active %} aria-current="page"{% endif %}>{{ child.label }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <a class="{{ itemClass }}" href="{{ entry.href }}"{% if entry.active %} aria-current="page"{% endif %}>
+            <span class="app-bottomnav-icon"><i class="fas {{ entry.icon }}"></i></span>
+            <span class="app-bottomnav-label">{{ entry.short }}</span>
         </a>
-    {% endfor %}
-    <button type="button" class="app-bottomnav-item" data-bs-toggle="offcanvas" data-bs-target="#appNavMenu"
-            aria-controls="appNavMenu">
-        <span class="app-bottomnav-icon"><i class="fas fa-bars"></i></span>
-        <span class="app-bottomnav-label">{{ 'nav.more'|trans }}</span>
-    </button>
+    {% endif %}
+{% endmacro %}
+
+{% import _self as navBar %}
+{# Both rows hold every entry: from-N shows one in the first row once the bar has N places,
+   until-N in the second row only while it has fewer (shell.css) #}
+<nav class="app-bottomnav" aria-label="{{ 'nav.menu'|trans }}" data-controller="bottomnav">
+    <div class="app-bottomnav-page app-bottomnav-page-tabs" id="appBottomnavTabs">
+        {% for entry in barEntries %}
+            {{ navBar.bottomnav_entry(entry, 'app-bottomnav-from-' ~ entry.fit) }}
+        {% endfor %}
+        {% if barCount > 1 %}
+            <button type="button" class="app-bottomnav-item app-bottomnav-until-{{ barCount }}"
+                    data-action="bottomnav#showMore" aria-controls="appBottomnavMore">
+                <span class="app-bottomnav-icon"><i class="fas fa-ellipsis"></i></span>
+                <span class="app-bottomnav-label">{{ 'nav.more'|trans }}</span>
+            </button>
+        {% endif %}
+    </div>
+    {% if barCount > 1 %}
+        <div class="app-bottomnav-page app-bottomnav-page-more" id="appBottomnavMore">
+            <button type="button" class="app-bottomnav-item" data-action="bottomnav#showTabs" aria-controls="appBottomnavTabs">
+                <span class="app-bottomnav-icon"><i class="fas fa-arrow-left"></i></span>
+                <span class="app-bottomnav-label">{{ 'button.back'|trans }}</span>
+            </button>
+            {% for entry in barEntries %}
+                {{ navBar.bottomnav_entry(entry, 'app-bottomnav-until-' ~ entry.fit) }}
+            {% endfor %}
+        </div>
+    {% endif %}
 </nav>
