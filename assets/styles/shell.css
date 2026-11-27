@@ -223,17 +223,6 @@
     border-top: 1px solid var(--feb-border);
 }
 
-/* Half transparent: the page scrolling beneath shows through, only lightly blurred, so its text
-   can nearly be read. Only where the browser can blur; elsewhere the bar stays solid, so its
-   labels stay readable over the page. */
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-    .app-bottomnav {
-        background-color: rgba(var(--feb-surface-rgb), .3);
-        -webkit-backdrop-filter: blur(2px) saturate(160%);
-        backdrop-filter: blur(2px) saturate(160%);
-    }
-}
-
 /* Two rows in the same place: the tabs, and behind "More" every other entry
    (bottomnav_controller.js). "More" pushes the tabs out to the left and the other entries in from
    the right, "Back" the other way round. A row out of sight is hidden, so it takes no taps and
