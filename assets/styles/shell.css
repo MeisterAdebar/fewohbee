@@ -213,23 +213,53 @@
     position: fixed;
     inset: auto 0 0;
     z-index: 1030;
-    display: grid;
-    grid-auto-columns: minmax(0, 1fr);
-    grid-auto-flow: column;
     height: calc(var(--feb-bottomnav-height) + env(safe-area-inset-bottom));
-    padding: 0 .25rem env(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom);
     background-color: var(--feb-surface);
     border-top: 1px solid var(--feb-border);
 }
 
+/* Every page in one row: what does not fit is swiped in. No snapping: it would pull the row off
+   the position that cuts an entry at the edge (bottomnav_controller.js). */
+.app-bottomnav-row {
+    display: flex;
+    height: 100%;
+    padding-inline: .25rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+}
+
+.app-bottomnav-row::-webkit-scrollbar {
+    display: none;
+}
+
+/* An edge with more beyond it fades out a little (bottomnav_controller.js), narrow enough to leave
+   the cut entry readable; a mask on the row only, so the bar stays solid and it suits any colour */
+.app-bottomnav-beyond-end {
+    mask-image: linear-gradient(to right, #000 calc(100% - 1rem), transparent);
+}
+
+.app-bottomnav-beyond-start {
+    mask-image: linear-gradient(to left, #000 calc(100% - 1rem), transparent);
+}
+
+.app-bottomnav-beyond-start.app-bottomnav-beyond-end {
+    mask-image: linear-gradient(to right, transparent, #000 1rem, #000 calc(100% - 1rem), transparent);
+}
+
 .app-bottomnav-item {
     display: flex;
+    flex: 1 0 auto;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: .2rem;
-    min-width: 0;
-    padding: 0;
+    /* At least the slot of a tab, wider for a long name, which stays whole */
+    min-width: 4.375rem;
+    /* plus a share of the room at the right edge, so it cuts the next entry (bottomnav_controller.js) */
+    padding: 0 calc(.375rem + var(--bottomnav-extra, 0px) / 2);
     border: 0;
     background: none;
     color: var(--feb-text-muted);
@@ -249,10 +279,41 @@
 }
 
 .app-bottomnav-label {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* A long press picks an entry up to move it (bottomnav_controller.js): no text selection, no menu
+   of the link and no dragging of the link itself on the way */
+.app-bottomnav-item {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    /* Safari before 18 knows only the prefixed form; without it the icon (a glyph) gets selected */
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.app-bottomnav-dragging {
+    position: relative;
+    z-index: 1;
+    border-radius: var(--feb-radius-lg);
+    background-color: var(--feb-surface);
+    box-shadow: var(--feb-shadow-md);
+    scale: 1.08;
+    transition: scale .15s ease, box-shadow .15s ease;
+}
+
+/* The others dim; the edges stay sharp while an entry is moved past them. The row does not scroll
+   under the finger then (Safari would, and the entry would ride along instead of moving on); the
+   controller scrolls it at the edges. */
+.app-bottomnav-sorting {
+    overflow-x: hidden;
+    touch-action: none;
+    mask-image: none;
+}
+
+.app-bottomnav-sorting .app-bottomnav-item:not(.app-bottomnav-dragging) {
+    opacity: .75;
 }
 
 .app-bottomnav-item.active {

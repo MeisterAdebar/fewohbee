@@ -18,8 +18,8 @@ import { onSwipe, horizontalSwipeDirection } from '../js/swipe.js';
  *   its data-step-days (default 1); its change event loads the day.
  *
  * A table wider than the screen scrolls sideways first; only a swipe on past
- * its edge pages. Swipes in form fields, dialogs and side panels are left
- * alone.
+ * its edge pages. Swipes in form fields, dialogs, side panels and the bottom
+ * bar (which scrolls sideways itself) are left alone.
  *
  * With data-swipe-nav-local-value="true" only a swipe on the element itself
  * pages - for a paged part of a longer page, e.g. a log below a form.
@@ -95,7 +95,7 @@ export default class extends Controller {
      */
     startState(target) {
         if (!(target instanceof Element)
-            || target.closest('input, textarea, select, [contenteditable], .modal, .offcanvas, .dropdown-menu, .popover')
+            || target.closest('input, textarea, select, [contenteditable], .modal, .offcanvas, .dropdown-menu, .popover, .app-bottomnav')
             || document.querySelector('.modal.show, .offcanvas.show, .offcanvas.showing')) {
             return null;
         }

@@ -22,8 +22,8 @@
         id: 'operations', label: 'nav.operations'|trans, icon: 'fa-concierge-bell', prefixes: ['operations.'], open: true,
         children: [
             { label: 'nav.operations.frontdesk'|trans, tab: 'nav.short.frontdesk'|trans, icon: 'fa-concierge-bell', href: path('operations.frontdesk'), prefixes: ['operations.frontdesk'] },
-            { label: 'nav.housekeeping'|trans, href: path('operations.housekeeping'), prefixes: ['operations.housekeeping'] },
-            { label: 'nav.operations.reports'|trans, href: path('operations.reports'), prefixes: ['operations.reports'] },
+            { label: 'nav.housekeeping'|trans, icon: 'fa-broom', href: path('operations.housekeeping'), prefixes: ['operations.housekeeping'] },
+            { label: 'nav.operations.reports'|trans, icon: 'fa-clipboard-list', href: path('operations.reports'), prefixes: ['operations.reports'] },
         ],
     }]) %}
 {% endif %}
@@ -55,10 +55,10 @@
     {% set items = items|merge([{
         id: 'statistics', label: 'nav.statistics'|trans, icon: 'fa-chart-bar', prefixes: ['statistics'],
         children: [
-            { label: 'nav.utilization'|trans, href: path('statistics.utilization'), prefixes: ['statistics.utilization'] },
-            { label: 'nav.origin'|trans, href: path('statistics.origin'), prefixes: ['statistics.origin'] },
-            { label: 'nav.turnover'|trans, href: path('statistics.turnover'), prefixes: ['statistics.turnover'] },
-            { label: 'nav.tourism'|trans, href: path('statistics.tourism'), prefixes: ['statistics.tourism'] },
+            { label: 'nav.utilization'|trans, icon: 'fa-bed', href: path('statistics.utilization'), prefixes: ['statistics.utilization'] },
+            { label: 'nav.origin'|trans, icon: 'fa-earth-europe', href: path('statistics.origin'), prefixes: ['statistics.origin'] },
+            { label: 'nav.turnover'|trans, icon: 'fa-coins', href: path('statistics.turnover'), prefixes: ['statistics.turnover'] },
+            { label: 'nav.tourism'|trans, icon: 'fa-suitcase-rolling', href: path('statistics.tourism'), prefixes: ['statistics.tourism'] },
         ],
     }]) %}
 {% endif %}
@@ -118,7 +118,7 @@
         </button>
     </div>
 
-    {# A side menu below lg (opened by "More" in the bottom bar), the sidebar's list from lg up #}
+    {# The sidebar's list from lg up; below lg the bottom bar holds every page #}
     <div class="offcanvas-lg offcanvas-end app-nav-menu" tabindex="-1" id="appNavMenu"
          data-controller="main-nav" aria-labelledby="appNavMenuLabel">
         <div class="offcanvas-header">
@@ -205,16 +205,30 @@
     </div>
 </nav>
 
+{#
+    Bottom bar: every page in one row that scrolls sideways, the four tabs first under their short
+    names, then the others in menu order under their full names (a group's pages one by one). What
+    does not fit is reached by swiping the bar; its edges fade while there is more beyond them, and
+    on loading it scrolls to the current page (bottomnav_controller.js).
+#}
+{% set barHrefs = tabs|slice(0, 4)|map(tab => tab.href) %}
+{% set barEntries = tabs|slice(0, 4)|map(tab => tab|merge({ label: tab.tab })) %}
+{% for item in marked %}
+    {% if item.children is empty %}
+        {% if item.href not in barHrefs %}{% set barEntries = barEntries|merge([item]) %}{% endif %}
+    {% else %}
+        {% for child in item.children|filter(child => child.href not in barHrefs) %}
+            {% set barEntries = barEntries|merge([child|merge({ icon: child.icon|default(item.icon) })]) %}
+        {% endfor %}
+    {% endif %}
+{% endfor %}
 <nav class="app-bottomnav" aria-label="{{ 'nav.menu'|trans }}">
-    {% for tab in tabs|slice(0, 4) %}
-        <a class="app-bottomnav-item{{ tab.active ? ' active' }}" href="{{ tab.href }}"{% if tab.active %} aria-current="page"{% endif %}>
-            <span class="app-bottomnav-icon"><i class="fas {{ tab.icon }}"></i></span>
-            <span class="app-bottomnav-label">{{ tab.tab }}</span>
-        </a>
-    {% endfor %}
-    <button type="button" class="app-bottomnav-item" data-bs-toggle="offcanvas" data-bs-target="#appNavMenu"
-            aria-controls="appNavMenu">
-        <span class="app-bottomnav-icon"><i class="fas fa-bars"></i></span>
-        <span class="app-bottomnav-label">{{ 'nav.more'|trans }}</span>
-    </button>
+    <div class="app-bottomnav-row" data-controller="bottomnav" data-action="scroll->bottomnav#update">
+        {% for entry in barEntries %}
+            <a class="app-bottomnav-item{{ entry.active ? ' active' }}" href="{{ entry.href }}" draggable="false"{% if entry.active %} aria-current="page"{% endif %}>
+                <span class="app-bottomnav-icon"><i class="fas {{ entry.icon }}"></i></span>
+                <span class="app-bottomnav-label">{{ entry.label }}</span>
+            </a>
+        {% endfor %}
+    </div>
 </nav>
