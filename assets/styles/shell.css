@@ -213,9 +213,7 @@
     position: fixed;
     inset: auto 0 0;
     z-index: 1030;
-    display: grid;
-    grid-auto-columns: minmax(0, 1fr);
-    grid-auto-flow: column;
+    display: flex;
     height: calc(var(--feb-bottomnav-height) + env(safe-area-inset-bottom));
     padding: 0 .25rem env(safe-area-inset-bottom);
     background-color: var(--feb-surface);
@@ -224,6 +222,7 @@
 
 .app-bottomnav-item {
     display: flex;
+    flex: 1 1 0;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -262,6 +261,170 @@
 
 .app-bottomnav-item.active .app-bottomnav-icon {
     background-color: var(--feb-primary-subtle);
+}
+
+/* Which pages stand in the bar: a page with app-bottomnav-from-N is in the bar from a screen
+   N px wide, an element with app-more-until-N (a tile, a section of the sheet, "More") only below.
+   N comes from _app_nav.html.twig in 20 px steps. app-more-active-until-N takes the mark off
+   "More" from where the current page stands in the bar itself. Above all, the slots share the width equally;
+   from 600 px a slot keeps at least the width of its name, which the steps leave room for. */
+@media (min-width: 600px) {
+    .app-bottomnav-item {
+        min-width: auto;
+    }
+}
+
+@media (max-width: 399.98px) { .app-bottomnav-from-400 { display: none !important; } }
+@media (min-width: 400px) { .app-more-until-400 { display: none !important; } .app-bottomnav-item.app-more-active-until-400 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-400 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 419.98px) { .app-bottomnav-from-420 { display: none !important; } }
+@media (min-width: 420px) { .app-more-until-420 { display: none !important; } .app-bottomnav-item.app-more-active-until-420 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-420 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 439.98px) { .app-bottomnav-from-440 { display: none !important; } }
+@media (min-width: 440px) { .app-more-until-440 { display: none !important; } .app-bottomnav-item.app-more-active-until-440 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-440 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 459.98px) { .app-bottomnav-from-460 { display: none !important; } }
+@media (min-width: 460px) { .app-more-until-460 { display: none !important; } .app-bottomnav-item.app-more-active-until-460 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-460 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 479.98px) { .app-bottomnav-from-480 { display: none !important; } }
+@media (min-width: 480px) { .app-more-until-480 { display: none !important; } .app-bottomnav-item.app-more-active-until-480 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-480 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 499.98px) { .app-bottomnav-from-500 { display: none !important; } }
+@media (min-width: 500px) { .app-more-until-500 { display: none !important; } .app-bottomnav-item.app-more-active-until-500 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-500 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 519.98px) { .app-bottomnav-from-520 { display: none !important; } }
+@media (min-width: 520px) { .app-more-until-520 { display: none !important; } .app-bottomnav-item.app-more-active-until-520 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-520 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 539.98px) { .app-bottomnav-from-540 { display: none !important; } }
+@media (min-width: 540px) { .app-more-until-540 { display: none !important; } .app-bottomnav-item.app-more-active-until-540 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-540 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 559.98px) { .app-bottomnav-from-560 { display: none !important; } }
+@media (min-width: 560px) { .app-more-until-560 { display: none !important; } .app-bottomnav-item.app-more-active-until-560 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-560 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 579.98px) { .app-bottomnav-from-580 { display: none !important; } }
+@media (min-width: 580px) { .app-more-until-580 { display: none !important; } .app-bottomnav-item.app-more-active-until-580 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-580 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 599.98px) { .app-bottomnav-from-600 { display: none !important; } }
+@media (min-width: 600px) { .app-more-until-600 { display: none !important; } .app-bottomnav-item.app-more-active-until-600 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-600 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 619.98px) { .app-bottomnav-from-620 { display: none !important; } }
+@media (min-width: 620px) { .app-more-until-620 { display: none !important; } .app-bottomnav-item.app-more-active-until-620 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-620 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 639.98px) { .app-bottomnav-from-640 { display: none !important; } }
+@media (min-width: 640px) { .app-more-until-640 { display: none !important; } .app-bottomnav-item.app-more-active-until-640 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-640 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 659.98px) { .app-bottomnav-from-660 { display: none !important; } }
+@media (min-width: 660px) { .app-more-until-660 { display: none !important; } .app-bottomnav-item.app-more-active-until-660 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-660 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 679.98px) { .app-bottomnav-from-680 { display: none !important; } }
+@media (min-width: 680px) { .app-more-until-680 { display: none !important; } .app-bottomnav-item.app-more-active-until-680 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-680 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 699.98px) { .app-bottomnav-from-700 { display: none !important; } }
+@media (min-width: 700px) { .app-more-until-700 { display: none !important; } .app-bottomnav-item.app-more-active-until-700 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-700 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 719.98px) { .app-bottomnav-from-720 { display: none !important; } }
+@media (min-width: 720px) { .app-more-until-720 { display: none !important; } .app-bottomnav-item.app-more-active-until-720 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-720 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 739.98px) { .app-bottomnav-from-740 { display: none !important; } }
+@media (min-width: 740px) { .app-more-until-740 { display: none !important; } .app-bottomnav-item.app-more-active-until-740 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-740 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 759.98px) { .app-bottomnav-from-760 { display: none !important; } }
+@media (min-width: 760px) { .app-more-until-760 { display: none !important; } .app-bottomnav-item.app-more-active-until-760 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-760 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 779.98px) { .app-bottomnav-from-780 { display: none !important; } }
+@media (min-width: 780px) { .app-more-until-780 { display: none !important; } .app-bottomnav-item.app-more-active-until-780 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-780 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 799.98px) { .app-bottomnav-from-800 { display: none !important; } }
+@media (min-width: 800px) { .app-more-until-800 { display: none !important; } .app-bottomnav-item.app-more-active-until-800 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-800 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 819.98px) { .app-bottomnav-from-820 { display: none !important; } }
+@media (min-width: 820px) { .app-more-until-820 { display: none !important; } .app-bottomnav-item.app-more-active-until-820 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-820 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 839.98px) { .app-bottomnav-from-840 { display: none !important; } }
+@media (min-width: 840px) { .app-more-until-840 { display: none !important; } .app-bottomnav-item.app-more-active-until-840 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-840 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 859.98px) { .app-bottomnav-from-860 { display: none !important; } }
+@media (min-width: 860px) { .app-more-until-860 { display: none !important; } .app-bottomnav-item.app-more-active-until-860 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-860 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 879.98px) { .app-bottomnav-from-880 { display: none !important; } }
+@media (min-width: 880px) { .app-more-until-880 { display: none !important; } .app-bottomnav-item.app-more-active-until-880 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-880 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 899.98px) { .app-bottomnav-from-900 { display: none !important; } }
+@media (min-width: 900px) { .app-more-until-900 { display: none !important; } .app-bottomnav-item.app-more-active-until-900 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-900 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 919.98px) { .app-bottomnav-from-920 { display: none !important; } }
+@media (min-width: 920px) { .app-more-until-920 { display: none !important; } .app-bottomnav-item.app-more-active-until-920 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-920 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 939.98px) { .app-bottomnav-from-940 { display: none !important; } }
+@media (min-width: 940px) { .app-more-until-940 { display: none !important; } .app-bottomnav-item.app-more-active-until-940 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-940 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 959.98px) { .app-bottomnav-from-960 { display: none !important; } }
+@media (min-width: 960px) { .app-more-until-960 { display: none !important; } .app-bottomnav-item.app-more-active-until-960 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-960 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 979.98px) { .app-bottomnav-from-980 { display: none !important; } }
+@media (min-width: 980px) { .app-more-until-980 { display: none !important; } .app-bottomnav-item.app-more-active-until-980 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-980 .app-bottomnav-icon { background-color: transparent; } }
+@media (max-width: 999.98px) { .app-bottomnav-from-1000 { display: none !important; } }
+@media (min-width: 1000px) { .app-more-until-1000 { display: none !important; } .app-bottomnav-item.app-more-active-until-1000 { color: var(--feb-text-muted); font-weight: var(--feb-font-weight-medium); } .app-bottomnav-item.app-more-active-until-1000 .app-bottomnav-icon { background-color: transparent; } }
+
+/* "More": a sheet from below with the entries that are not in the bar, as tiles under their full
+   names. */
+.app-more-sheet {
+    --bs-offcanvas-height: auto;
+    max-height: 85vh;
+    padding-bottom: env(safe-area-inset-bottom);
+    border-top-left-radius: var(--feb-radius-xl);
+    border-top-right-radius: var(--feb-radius-xl);
+}
+
+.app-more-sheet .offcanvas-header {
+    padding-bottom: .25rem;
+}
+
+.app-more-sheet .offcanvas-body {
+    padding-top: .25rem;
+}
+
+.app-more-heading {
+    margin: 1rem 0 .5rem;
+    color: var(--feb-text-muted);
+    font-size: var(--feb-font-size-sm);
+    font-weight: var(--feb-font-weight-strong);
+}
+
+.app-more-grid {
+    display: grid;
+    /* Wide enough for the longest name (Reservierungsherkunft) on one line, whatever the device's
+       font and whether it can hyphenate: two tiles a row on a phone, more on a tablet */
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    gap: .5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.app-more-grid > li {
+    min-width: 0;
+}
+
+.app-more-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .375rem;
+    height: 100%;
+    padding: .75rem .25rem;
+    border-radius: var(--feb-radius-lg);
+    background-color: var(--feb-surface-2);
+    color: var(--feb-text);
+    font-size: var(--feb-font-size-sm);
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    /* A long name (Reservierungsherkunft) breaks at a syllable, in the page's language; where the
+       browser cannot hyphenate, inside the word rather than past the tile */
+    hyphens: auto;
+    overflow-wrap: break-word;
+}
+
+.app-more-label {
+    /* Without it the label keeps the width of its longest word and the break above never applies */
+    max-width: 100%;
+}
+
+.app-more-icon {
+    color: var(--feb-text-muted);
+    font-size: 1.25rem;
+}
+
+.app-more-tile.active {
+    background-color: var(--feb-primary-subtle);
+    color: var(--feb-primary-text);
+}
+
+.app-more-tile.active .app-more-icon {
+    color: inherit;
+}
+
+.app-more-tile:focus-visible {
+    outline: 0;
+    box-shadow: inset 0 0 0 .15rem var(--feb-focus-ring);
+}
+
+@media (min-width: 992px) {
+    .app-more-sheet {
+        display: none;
+    }
 }
 
 @media (max-width: 991.98px) {
